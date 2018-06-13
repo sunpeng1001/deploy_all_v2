@@ -1,0 +1,17 @@
+---
+- name: Config ntp iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    protocol: udp
+    match: multiport
+    destination_port: 123
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for ntp {mark}"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -p udp -m multiport --dport 123 -j ACCEPT

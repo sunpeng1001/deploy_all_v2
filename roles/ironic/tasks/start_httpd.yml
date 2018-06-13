@@ -1,0 +1,8 @@
+---
+# roles/ironic/tasks/start_httpd.yml
+
+- name: Be sure httpd is enabled and started
+  service:
+    name: httpd
+    state: started
+    enabled: true

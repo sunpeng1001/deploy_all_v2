@@ -1,0 +1,46 @@
+---
+- name: Config nova-serialproxy iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack.management.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ openstack_nova.port.serialproxy_ha }}'
+  run_once: true
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - ironic_ha_nova_serialproxy
+
+- name: Insert tcp rule to /etc/sysconfig/iptables for nova-serialproxy
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: '#{mark} iptables for nova-serialproxy ha port {mark}#'
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+        -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_nova.port.serialproxy_ha }} -j ACCEPT
+  run_once: true
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - ironic_ha_nova_serialproxy
+
+- name: Insert nova into haproxy info /etc/haproxy/haproxy.cfg
+  blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: '#{mark} listen for OpenStack nova-serialproxy {mark}#'
+    state: present
+    block: |
+        listen nova_serialproxy
+          bind {{ nova_serialproxy_host }}:{{ nova_serialproxy_port }}
+          balance roundrobin
+          option  tcpka
+          option  httplog
+         {% for host in groups['ironic'] %}
+         server node-{{ loop.index }} {{ host }}:{{ openstack_nova.port.serialproxy }} check inter 2000 rise 2 fall 5
+         {% endfor %}
+  run_once: true
+  notify: Restart haproxy on proxy_ha
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - ironic_ha_nova_serialproxy

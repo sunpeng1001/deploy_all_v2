@@ -1,0 +1,46 @@
+---
+- name: Make sure directory is exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  loop:
+    - /tftpboot
+    - /tftpboot/pxelinux.cfg
+
+- name: Config /etc/xinetd.d/tftp
+  copy:
+    src: tftp
+    dest: /etc/xinetd.d/tftp
+  notify:
+    - Restart xinetd
+
+- name: Copy pxelinux.0 to /tftpboot
+  copy:
+    src: /usr/share/syslinux/pxelinux.0
+    dest: /tftpboot/pxelinux.0
+    remote_src: true
+
+- name: Config /tftp/map-file
+  copy:
+    src: map-file
+    dest: /tftpboot/map-file
+
+- name: Create ssh-key for pxelinux.cfg
+  shell: creates=~/.ssh/id_rsa.pub ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+
+- name: Gather ssh pubkey infos
+  shell: cat ~/.ssh/id_rsa.pub
+  register: pub_key_res
+  changed_when: false
+
+- name: Config /tftpboot/pxelinux.cfg/default
+  template:
+    src: pxelinux.cfg.j2
+    dest: /tftpboot/pxelinux.cfg/default
+
+- name: Download ramdisks and put it to /tftpboot
+  get_url:
+    url: "{{ item }}"
+    dest: /tftpboot
+  loop: "{{ urls_of_ramdisk }}"

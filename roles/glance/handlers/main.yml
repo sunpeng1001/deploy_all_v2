@@ -1,0 +1,14 @@
+---
+# roles/glance/handlers/main.yml
+
+- name: Restart Glance services
+  service:
+    name: openstack-glance-api
+    state: restarted
+
+- name: Restart haproxy
+  service:
+    name: haproxy
+    state: restarted
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['os_ha'] }}"

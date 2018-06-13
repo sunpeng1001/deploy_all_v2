@@ -1,0 +1,15 @@
+---
+- name: Restart haproxy
+  service:
+    name: haproxy
+    state: restarted
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['os_ha'] }}"
+
+- name: Restart cinder services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+    - openstack-cinder-api
+    - openstack-cinder-scheduler

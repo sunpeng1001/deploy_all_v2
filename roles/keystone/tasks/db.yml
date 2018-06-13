@@ -1,0 +1,30 @@
+---
+# roles/keystone/tasks/db.yml
+
+- name: Create DB for service
+  mysql_db:
+    login_host: "{{ keystone_db_host }}"
+    login_port: "{{ keystone_db_port }}"
+    login_user: "{{ mariadb.admin.user }}"
+    login_password: "{{ mariadb.admin.password }}"
+    config_file: /etc/my.cnf
+    name: "{{ openstack_keystone.db.database }}"
+    encoding: "utf8"
+    state: present
+
+- name: Grant access to the DB for the service
+  mysql_user:
+    login_host: "{{ keystone_db_host }}"
+    login_port: "{{ keystone_db_port }}"
+    login_user: "{{ mariadb.admin.user }}"
+    login_password: "{{ mariadb.admin.password }}"
+    config_file: /etc/my.cnf
+    name: "{{ openstack_keystone.db.user }}"
+    password: "{{ openstack_keystone.db.password }}"
+    host: "{{ item }}"
+    priv: "{{ openstack_keystone.db.database }}.*:ALL"
+    append_privs: true
+    state: present
+  loop:
+    - "localhost"
+    - "%"

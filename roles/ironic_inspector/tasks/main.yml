@@ -1,0 +1,36 @@
+---
+- import_tasks: iptables.yml
+  tags:
+    - ironic_inspector_iptables
+
+- import_tasks: install.yml
+  tags:
+    - ironic_inspector_install.yml
+
+- import_tasks: auth.yml
+  tags:
+    - ironic_inspector_auth
+
+- import_tasks: db.yml
+  tags:
+    - ironic_inspector_db
+
+- import_tasks: config_pxe.yml
+  tags:
+    - ironic_inspector_config_pxe
+
+- import_tasks: config_dnsmasq.yml
+  tags:
+    - ironic_inspector_config_dnsmasq
+
+- import_tasks: config.yml
+  tags:
+    - ironic_inspector_config
+
+- import_tasks: db_sync.yml
+  tags:
+    - ironic_inspector_db_sync
+
+- import_tasks: start.yml
+  tags:
+    - ironic_inspector_start

@@ -1,0 +1,22 @@
+---
+- name: Restart haproxy
+  service:
+    name: haproxy
+    state: restarted
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['os_ha'] }}"
+
+- name: Restart nova services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+    - openstack-nova-api
+    - openstack-nova-scheduler
+    - openstack-nova-conductor
+    - openstack-nova-consoleauth
+
+- name: Restart httpd
+  service:
+    name: httpd
+    state: restarted

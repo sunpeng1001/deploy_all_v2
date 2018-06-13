@@ -1,0 +1,35 @@
+---
+- name: Create log path
+  file:
+    path: "{{ log_path }}"
+    owner: root
+    group: root
+    state: directory
+
+- name: Create cinder log path
+  file:
+    path: "{{ cinder_log_path }}"
+    owner: cinder
+    group: cinder
+    state: directory
+    recurse: true
+
+- name: Modify cinder log path
+  shell: "{{ item }}"
+  loop:
+    - 'sed -i "s#/var/log/cinder#{{ cinder_log_path }}#g" /usr/lib/systemd/system/openstack-cinder-api.service'
+    - 'sed -i "s#/var/log/cinder#{{ cinder_log_path }}#g" /usr/lib/systemd/system/openstack-cinder-scheduler.service'
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: true
+
+- name: Cinder config
+  template:
+    src: cinder.conf.j2
+    dest: /etc/cinder/cinder.conf
+    owner: root
+    group: cinder
+    mode: 0640
+  notify:
+    - Restart cinder services

@@ -1,0 +1,24 @@
+---
+- name: Config nova iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack.management.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ item }}'
+  loop:
+    - '{{ openstack_nova.port.api}}'
+    - '{{ openstack_nova.port.api_metadata }}'
+    - '{{ openstack_placement.port }}'
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for OpenStack Nova {mark} #"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_nova.port.api }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_nova.port.api_metadata }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_placement.port }} -j ACCEPT

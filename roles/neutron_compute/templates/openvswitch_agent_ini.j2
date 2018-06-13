@@ -1,0 +1,27 @@
+[DEFAULT]
+
+[agent]
+{% if network_openstack.tenant.network_type is not defined or network_openstack.tenant.network_type == 'vlan' or not network_openstack.tenant.network_type %}
+enable_distributed_routing = True
+l2_population = True
+extensions = qos
+{% else %}
+tunnel_types = vxlan
+enable_distributed_routing = True
+l2_population = True
+arp_responder = True
+prevent_arp_spoofing = True
+extensions = qos
+{% endif %}
+
+[ovs]
+{% if network_openstack.tenant.network_type is not defined or network_openstack.tenant.network_type == 'vlan' or not network_openstack.tenant.network_type %}
+bridge_mappings = tenant:br-vlan,external:br-ex
+{% else %}
+local_ip = {{ hostvars[inventory_hostname]['ansible_' + network_openstack_compute.tenant.interface]['ipv4']['address'] }}
+bridge_mappings = external:br-ex
+{% endif %}
+
+[securitygroup]
+firewall_driver = openvswitch
+enable_security_group = True

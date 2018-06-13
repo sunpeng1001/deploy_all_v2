@@ -1,0 +1,11 @@
+---
+# roles/system_init/tasks/logrotate.yml
+
+- name: Disable system log cutting
+  copy:
+    src: logrotate.conf
+    dest: /etc/logrotate.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart rsyslog service

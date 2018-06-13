@@ -1,0 +1,62 @@
+---
+- name: Install packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python2-networking-generic-switch
+    - pyserial
+    - python2-netmiko
+    - python2-treelib
+    - python2-textfsm
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - ironic_config_neutron_server
+
+- name: Config /etc/neutron/plugins/ml2/ml2_conf_genericswitch.ini
+  template:
+    src: ml2_conf_genericswitch.ini.j2
+    dest: /etc/neutron/plugins/ml2/ml2_conf_genericswitch.ini
+    owner: root
+    group: neutron
+    mode: 0640
+  notify:
+    - Restart neutron-server
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - ironic_config_neutron_server
+
+- name: Update mechanism drivers for neutron ml2
+  ini_file:
+    path: /etc/neutron/plugins/ml2/ml2_conf.ini
+    section: ml2
+    option: mechanism_drivers
+    value: 'openvswitch,genericswitch'
+    owner: root
+    group: neutron
+    mode: 0640
+  notify:
+    - Restart neutron-server
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - ironic_config_neutron_server
+
+- name: Modify neutron-server.service
+  copy:
+    src: neutron-server.service
+    dest: /usr/lib/systemd/system/neutron-server.service
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - Restart neutron-server
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - ironic_config_neutron_server
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - ironic_config_neutron_server

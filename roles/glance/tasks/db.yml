@@ -1,0 +1,30 @@
+---
+# roles/glance/tasks/db.yml
+
+- name: Create DB for Glance
+  mysql_db:
+    login_user: "{{ mariadb.admin.user }}"
+    login_password: "{{ mariadb.admin.password }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    config_file: /etc/my.cnf
+    name: "{{ openstack_glance.db.database }}"
+    encoding: "utf8"
+    state: "present"
+
+- name: Grant access to the DB for Glance
+  mysql_user:
+    login_user: "{{ mariadb.admin.user }}"
+    login_password: "{{ mariadb.admin.password }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    config_file: /etc/my.cnf
+    name: "{{ openstack_glance.db.user }}"
+    password: "{{ openstack_glance.db.password }}"
+    host: "{{ item }}"
+    state: "present"
+    priv: "{{ openstack_glance.db.database }}.*:ALL"
+    append_privs: true
+  loop:
+    - "localhost"
+    - "%"

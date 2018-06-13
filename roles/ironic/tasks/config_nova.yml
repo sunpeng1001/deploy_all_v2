@@ -1,0 +1,37 @@
+---
+# roles/ironic/tasks/config_nova.yml
+
+- name: Make sure log path is exist
+  file:
+    path: "{{ log_path }}"
+    state: directory
+    owner: root
+    group: root
+
+- name: Create nova log path
+  file:
+    path: "{{ log_path }}/nova"
+    state: directory
+    owner: nova
+    group: nova
+    recurse: true
+
+- name: Modify nova log path
+  replace:
+    path: /usr/lib/systemd/system/openstack-nova-compute.service
+    regexp: 'nova-compute.*$'
+    replace: 'nova-compute --log-file {{ log_path }}/nova/nova-compute.log'
+
+- name: Force systemd to reread configs
+  systemd:
+    daemon_reload: true
+
+- name: Nova config
+  template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    mode: 0644
+  notify:
+    - Restart nova

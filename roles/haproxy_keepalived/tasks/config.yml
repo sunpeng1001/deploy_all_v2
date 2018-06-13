@@ -1,0 +1,48 @@
+---
+- name: Config keepalived,haproxy log step 1
+  lineinfile:
+    path: '{{ item.path }}'
+    regexp: '{{ item.regexp }}'
+    line: '{{ item.line }}'
+  loop:
+    - { path: '/etc/sysconfig/keepalived', regexp: '^KEEPALIVED_OPTIONS=', line: 'KEEPALIVED_OPTIONS="-D -d -S 0"' }
+  notify: Restart keepalived
+
+- name: Config keepalived,haproxy log step 2
+  replace:
+    path: '/etc/rsyslog.conf'
+    regexp: '{{ item.regexp }}'
+    replace: '{{ item.replace }}'
+  loop:
+    - { regexp: 'cron.none(\s+)/var/log/messages', replace: '.none;local0.none;local2.none    /var/log/messages' }
+    - { regexp: '^\#\$UDPServerRun 514', replace: "$UDPServerRun 514" }
+    - { regexp: '^\#\$ModLoad imudp', replace: "$ModLoad imudp" }
+  notify: Restart rsyslog
+
+- name: Config keepalived,haproxy log step 3
+  blockinfile:
+    path: '/etc/rsyslog.conf'
+    block: |
+      local0.* /var/log/keepalived.log
+      local2.* /var/log/haproxy.log
+  notify: Restart rsyslog
+
+- name: Copy keepalived conf file
+  template:
+    src: 'keepalived.conf.j2'
+    dest: '/etc/keepalived/keepalived.conf'
+    mode: '0644'
+  notify: Restart keepalived
+
+- name: Copy haproxy conf file
+  template:
+    src: 'haproxy.cfg.j2'
+    dest: '/etc/haproxy/haproxy.cfg'
+    mode: '0644'
+  notify: Restart haproxy
+
+- name: Copy check_haproxy script file
+  copy:
+    src: 'check_haproxy.sh'
+    dest: '/etc/keepalived/check_haproxy.sh'
+    mode: '0755'

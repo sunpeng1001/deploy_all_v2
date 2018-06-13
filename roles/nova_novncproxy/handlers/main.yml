@@ -1,0 +1,12 @@
+---
+- name: Restart openstack-nova-novncproxy
+  service:
+    name: openstack-nova-novncproxy
+    state: restarted
+
+- name: Restart haproxy
+  service:
+    name: haproxy
+    state: restarted
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['proxy_ha'] }}"

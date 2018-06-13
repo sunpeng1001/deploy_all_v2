@@ -1,0 +1,47 @@
+---
+# roles/glance/tasks/auth.yml
+
+- block:
+  - name: Create glance user
+    os_user:
+      state: present
+      name: glance
+      password: "{{ openstack_glance.auth.password }}"
+      domain: default
+      default_project: service
+
+  - name:  Add admin role to the user glance
+    os_user_role:
+      user: glance
+      role: admin
+      project: service
+
+  - name: Create glance service entity
+    os_keystone_service:
+      state: present
+      name: glance
+      service_type: image
+      description: OpenStack Image
+
+  - name: Create the image API endpoint
+    os_keystone_endpoint:
+      service: glance
+      endpoint_interface: "{{ item }}"
+      url: http://{{ glance_api_host }}:{{ glance_api_port }}
+      region: RegionOne
+      state: present
+    loop:
+      - admin
+      - public
+      - internal
+
+  environment:
+    OS_PROJECT_DOMAIN_NAME: default
+    OS_USER_DOMAIN_NAME: default
+    OS_PROJECT_NAME: admin
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ openstack_keystone.auth.password }}"
+    OS_AUTH_URL: "http://{{ auth_admin_host }}:{{ auth_admin_port }}/v3"
+    OS_IDENTITY_API_VERSION: 3
+    OS_IMAGE_API_VERSION: 2
+

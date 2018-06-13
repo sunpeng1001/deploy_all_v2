@@ -1,0 +1,14 @@
+---
+- hosts: nova_rabbit
+  pre_tasks:
+    - import_tasks: common-tasks/binding_lo_hosts.yml
+    - import_tasks: common-tasks/binding_hosts.yml
+  roles:
+    - rabbitmq
+
+- hosts: other_rabbit
+  pre_tasks:
+    - import_tasks: common-tasks/binding_lo_hosts.yml
+    - import_tasks: common-tasks/binding_hosts.yml
+  roles:
+    - rabbitmq

@@ -1,0 +1,9 @@
+---
+- name: Start cinder related services
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - openstack-cinder-volume.service
+    - openstack-cinder-backup.service

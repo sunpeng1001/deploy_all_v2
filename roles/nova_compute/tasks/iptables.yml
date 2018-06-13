@@ -1,0 +1,58 @@
+---
+- name: Config compute iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ migrate_network }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ libvirtd_port }}'
+
+- name: Config compute iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack.management.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ compute_vnc_port }}'
+
+- name: Config compute iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ migrate_network }}'
+    protocol: udp
+    match: multiport
+    destination_port: '{{ item }}'
+  loop: '{{ iptables_compute_udp_port }}'
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: '#{mark} iptables rules for libvirtd {mark}'
+    insertafter: '^:OUTPUT ACCEPT '
+    block: '-A INPUT -s {{ item }} -p tcp -m multiport --dport {{ libvirtd_port }} -j ACCEPT'
+  loop:
+    - '{{ migrate_network }}'
+  tags: compute_iptables
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: '#{mark} iptables rules for VM vnc {mark}'
+    insertafter: '^:OUTPUT ACCEPT '
+    block: '-A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ compute_vnc_port }} -j ACCEPT'
+  tags: compute_iptables
+
+- name: Insert udp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: '#{mark} iptables rules for migrate {mark}'
+    insertafter: '^:OUTPUT ACCEPT '
+    block: '-A INPUT -s {{ migrate_network }} -p udp -m multiport --dport {{ item }} -j ACCEPT'
+  loop: '{{ iptables_compute_udp_port }}'
+  tags: compute_iptables

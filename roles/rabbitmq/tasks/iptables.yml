@@ -1,0 +1,48 @@
+---
+- name: Config rabbitmq onenode iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack.management.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ item }}'
+  with_list:
+    "{{ iptables_rabbitmq_onenode_port }}"
+  when: ansible_play_batch|length == 1
+
+- name: Config rabbitmq cluster iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack.management.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ item }}'
+  with_list:
+    "{{ iptables_rabbitmq_cluster_port }}"
+  when: ansible_play_batch|length > 1
+
+- name: Insert tcp rule to /etc/sysconfig/iptables onenode
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for rabbitmq {mark}"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ rabbitmq_port }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ rabbitmq_mgr_port }} -j ACCEPT
+  when: ansible_play_batch|length == 1
+
+- name: Insert tcp rule to /etc/sysconfig/iptables cluster
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for rabbitmq cluster {mark}"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ rabbitmq_port }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ rabbitmq_mgr_port }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ rabbitmq_epmd_port }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ rabbitmq_dist_port }} -j ACCEPT
+  when: ansible_play_batch|length > 1

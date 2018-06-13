@@ -1,0 +1,12 @@
+---
+# roles/system_init/tasks/hostname.yml
+
+- name: Hostname config
+  hostname:
+    name: "{{ hostvars[inventory_hostname]['ansible_' + network_openstack.management.interface]['ipv4']['address'].replace('.','e') }}"
+  when: "'compute' not in group_names"
+
+- name: Compute hostname config
+  hostname:
+    name: "{{ hostvars[inventory_hostname]['ansible_' + network_openstack_compute.management.interface]['ipv4']['address'].replace('.','e') }}"
+  when: "'compute' in group_names"

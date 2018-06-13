@@ -1,0 +1,10 @@
+---
+- name: Config /etc/ironic-inspector/dnsmasq.conf
+  template:
+    src: dnsmasq.conf.j2
+    dest: /etc/ironic-inspector/dnsmasq.conf
+    owner: root
+    group: ironic-inspector
+    mode: 0644
+  notify:
+    - Restart openstack-ironic-inspector-dnsmasq

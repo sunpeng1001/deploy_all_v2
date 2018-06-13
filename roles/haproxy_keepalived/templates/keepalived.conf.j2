@@ -1,0 +1,45 @@
+global_defs {
+   notification_email {
+     keeplived@system.com
+   }
+   notification_email_from lcoalhost@system.com
+   smtp_server 127.0.0.1
+   smtp_connect_timeout 30
+   router_id {{ ansible_hostname }}
+}
+
+vrrp_script chk_http_port {
+    script "/etc/keepalived/check_haproxy.sh"
+    interval 2
+    weight 2
+}
+
+vrrp_instance VI_1 {
+    interface {{ nic }}
+    virtual_router_id {{ vid }}
+{% if inventory_hostname == master  %}
+    priority 100
+    nopreempt
+{% else %}
+    priority 90
+{% endif %}
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 2376
+    }
+    virtual_ipaddress {
+        {{ vip }}/{{ netmask }} dev {{ nic }}
+    }
+    unicast_src_ip {{ inventory_hostname }}
+    unicast_peer {
+{% if inventory_hostname == master %}
+         {{ slave }}
+{% else %}
+         {{ master }}
+{% endif %}
+                 }
+    track_script {
+         chk_http_port
+     }
+}

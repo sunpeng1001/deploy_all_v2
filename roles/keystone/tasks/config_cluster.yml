@@ -1,0 +1,86 @@
+---
+# roles/keystone/tasks/config_cluster.yml
+
+- name: Make sure directory {{ inventory_dir }}/tmp is exist
+  file:
+    name: "{{ inventory_dir }}/tmp"
+    state: directory
+  delegate_to: 127.0.0.1
+  run_once: true
+
+- name: Pull keystone key to /tmp
+  synchronize:
+    mode: pull
+    src: "{{ item.src }}"
+    dest: "{{ inventory_dir }}/{{ item.dest }}"
+    archive: true
+    checksum: true
+  loop:
+    - { src: '/etc/keystone/credential-keys/0',dest: 'tmp/credential-keys-0' }
+    - { src: '/etc/keystone/credential-keys/1',dest: 'tmp/credential-keys-1' }
+    - { src: '/etc/keystone/fernet-keys/0',dest: 'tmp/fernet-keys-0' }
+    - { src: '/etc/keystone/fernet-keys/1',dest: 'tmp/fernet-keys-1' }
+  when: inventory_hostname == keystone_master
+
+- name: Copy keystone key
+  copy:
+    src: "{{ inventory_dir }}/{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: keystone
+    group: keystone
+    mode: 0600
+  loop:
+    - { src: 'tmp/credential-keys-0',dest: '/etc/keystone/credential-keys/0' }
+    - { src: 'tmp/credential-keys-1',dest: '/etc/keystone/credential-keys/1' }
+    - { src: 'tmp/fernet-keys-0',dest: '/etc/keystone/fernet-keys/0' }
+    - { src: 'tmp/fernet-keys-1',dest: '/etc/keystone/fernet-keys/1' }
+  when: inventory_hostname != keystone_master
+  notify:
+    - Delete tmp keystone keys
+
+- name: Bootstrap the Identity service
+  shell:
+    cmd: |
+      keystone-manage --config-dir /etc/keystone bootstrap --bootstrap-password {{ openstack_keystone.auth.password }} \
+      --bootstrap-admin-url http://{{ auth_admin_host }}:{{ openstack_keystone.port.admin_ha }}/v3/ \
+      --bootstrap-internal-url http://{{ auth_public_host }}:{{ openstack_keystone.port.public_ha }}/v3/ \
+      --bootstrap-public-url http://{{ network_openstack.management.vip }}:{{ openstack_keystone.port.internal }}/v3/ \
+      --bootstrap-region-id RegionOne
+  when: inventory_hostname == keystone_master
+
+- name: Sync admin-openrc.sh
+  template:
+    src: admin-openrc.sh.j2
+    dest: /root/admin-openrc.sh
+    mode: 0755
+  vars:
+    controller_host: "{{ auth_admin_host }}"
+    keystone_admin_port: "{{ openstack_keystone.port.admin_ha }}"
+
+- block:
+  - name: Create service project
+    os_project:
+      name: service
+      description: Service Project
+      domain: default
+      region_name: RegionOne
+      enabled: true
+      state: present
+      wait: true
+
+  - name: Create user role
+    os_keystone_role:
+      name: user
+      state: present
+      wait: true
+
+  environment:
+    OS_PROJECT_DOMAIN_NAME: default
+    OS_USER_DOMAIN_NAME: default
+    OS_PROJECT_NAME: admin
+    OS_USERNAME: admin
+    OS_PASSWORD: '{{ openstack_keystone.auth.password }}'
+    OS_AUTH_URL: http://{{ auth_admin_host }}:{{ openstack_keystone.port.admin_ha }}/v3
+    OS_IDENTITY_API_VERSION: 3
+    OS_IMAGE_API_VERSION: 2
+  run_once: true

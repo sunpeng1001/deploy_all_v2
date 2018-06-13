@@ -1,0 +1,30 @@
+---
+# roles/glance/tasks/pre_install.yml
+
+- name: Create group glance
+  group:
+    name: glance
+    state: present
+
+- name: Create user glance
+  user:
+    name: glance
+    shell: /sbin/nologin
+    group: glance
+    state: present
+
+- name: Make sure log path is created
+  file:
+    path: "{{ log_path }}"
+    owner: root
+    group: root
+    state: directory
+
+- name: Create glance log path
+  file:
+    path: "{{ log_path }}/glance"
+    owner: glance
+    group: glance
+    state: directory
+    recurse: true
+

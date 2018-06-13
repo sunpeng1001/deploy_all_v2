@@ -1,0 +1,9 @@
+---
+- import_tasks: install.yml
+  tags: cinder_compute_install
+
+- import_tasks: config.yml
+  tags: cinder_compute_config
+
+- import_tasks: start.yml
+  tags: cinder_compute_start

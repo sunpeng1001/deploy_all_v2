@@ -1,0 +1,5 @@
+---
+- name: Install ntpd
+  yum:
+    name: ntp
+    state: present

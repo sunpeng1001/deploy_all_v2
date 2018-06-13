@@ -1,0 +1,3 @@
+- hosts: neutron_server
+  roles:
+    - neutron_controller

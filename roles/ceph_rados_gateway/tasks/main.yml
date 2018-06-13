@@ -1,0 +1,16 @@
+---
+- import_tasks: iptables.yml
+  tags:
+    - ceph_rados_gateway_iptables
+
+- import_tasks: install.yml
+  tags:
+    - ceph_rados_gateway_install
+
+- import_tasks: config.yml
+  tags:
+    - ceph_rados_gateway_config
+
+- import_tasks: start.yml
+  tags:
+    - ceph_rados_gateway_start

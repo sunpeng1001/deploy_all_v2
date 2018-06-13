@@ -1,0 +1,12 @@
+[DEFAULT]
+log_file = {{ log_path }}/keystone/keystone.log
+
+[database]
+connection = mysql+pymysql://{{ openstack_keystone.db.user }}:{{ openstack_keystone.db.password }}@{{ keystone_db_host }}:{{ keystone_db_port }}/keystone
+min_pool_size = 10
+max_pool_size = 50
+max_overflow = 50
+connection_recycle_time = 1800
+
+[token]
+provider = fernet

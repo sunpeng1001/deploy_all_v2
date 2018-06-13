@@ -1,0 +1,12 @@
+---
+# roles/system_init/tasks/sshd_config.yml
+
+- name: Sshd and ssh config
+  copy:
+    src: sshd_config
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 600
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart sshd

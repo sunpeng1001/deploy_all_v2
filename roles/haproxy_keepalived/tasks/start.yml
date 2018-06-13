@@ -1,0 +1,9 @@
+---
+- name: Start service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - keepalived
+    - haproxy

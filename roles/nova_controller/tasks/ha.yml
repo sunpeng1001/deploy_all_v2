@@ -1,0 +1,93 @@
+---
+- name: Config nova iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack.management.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ item }}'
+  run_once: true
+  delegate_to: "{{ outer_item }}"
+  loop:
+    - '{{ openstack_nova.port.api_ha }}'
+    - '{{ openstack_placement.port_ha }}'
+    - '{{ openstack_nova.port.api_metadata_ha }}'
+  tags:
+    - nova_controller_ha
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: '#{mark} iptables for OpenStack Nova ha port {mark}#'
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+        -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_nova.port.api_ha }} -j ACCEPT
+        -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_placement.port_ha }} -j ACCEPT
+        -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_nova.port.api_metadata_ha }} -j ACCEPT
+  run_once: true
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - nova_controller_ha
+
+- name: Insert nova into haproxy info /etc/haproxy/haproxy.cfg
+  blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: '#{mark} listen for OpenStack nova-api {mark}#'
+    state: present
+    block: |
+        listen nova-api
+          bind {{ nova_api_host }}:{{ nova_api_port }}
+          balance roundrobin
+          option  tcpka
+          option  httpchk
+          option  httplog
+         {% for host in groups['nova_server'] %}
+         server node-{{ loop.index }} {{ host }}:{{ openstack_nova.port.api }} check inter 2000 rise 2 fall 5
+         {% endfor %}
+  run_once: true
+  notify: Restart haproxy
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - nova_controller_ha
+
+- name: Insert nova_placemnet into haproxy info /etc/haproxy/haproxy.cfg
+  blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: '#{mark} listen for OpenStack nova-placement {mark}#'
+    state: present
+    block: |
+        listen nova-placement
+          bind {{ nova_placement_api_host }}:{{ nova_placement_api_port }}
+          balance roundrobin
+          option  tcpka
+          option  httplog
+         {% for host in groups['nova_server'] %}
+         server node-{{ loop.index }} {{ host }}:{{ openstack_placement.port }} check inter 2000 rise 2 fall 5
+         {% endfor %}
+  run_once: true
+  notify: Restart haproxy
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - nova_controller_ha
+
+- name: Insert nova_placemnet into haproxy info /etc/haproxy/haproxy.cfg
+  blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: '#{mark} listen for OpenStack nova-metadata-api {mark}#'
+    state: present
+    block: |
+        listen nova-metadata-api
+          bind {{ nova_api_metadata_host }}:{{ nova_api_metadata_port }}
+          balance roundrobin
+          option  tcpka
+          option  httplog
+         {% for host in groups['nova_server'] %}
+         server node-{{ loop.index }} {{ host }}:{{ openstack_nova.port.api_metadata }} check inter 2000 rise 2 fall 5
+         {% endfor %}
+  run_once: true
+  notify: Restart haproxy
+  delegate_to: "{{ outer_item }}"
+  tags:
+    - nova_controller_ha

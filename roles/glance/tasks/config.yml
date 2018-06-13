@@ -1,0 +1,70 @@
+---
+# roles/glance/tasks/config.yml
+
+- name: Gather facts for {{ groups['ceph_rados_gateway'][0] }}
+  setup:
+  delegate_to: "{{ groups['ceph_rados_gateway'][0] }}"
+  delegate_facts: true
+  run_once: true
+
+- name: Get storage interface
+  set_fact:
+    rgw_storage_interface: "{{ item }}"
+  when:
+    - hostvars[groups.ceph_rados_gateway.0]['ansible_' + item]['ipv4'] is defined
+    - hostvars[groups.ceph_rados_gateway.0]['ansible_' + item]['ipv4']['network'] == network_openstack.storage.cidr|ipaddr('network')
+    - hostvars[groups.ceph_rados_gateway.0]['ansible_' + item]['ipv4']['netmask'] == network_openstack.storage.cidr|ipaddr('netmask')
+  loop: "{{ hostvars[groups.ceph_rados_gateway.0].ansible_interfaces }}"
+  run_once: true
+
+- name: Make sure variable rgw_storage_interface is defined
+  assert:
+    that:
+      - rgw_storage_interface is defined
+    msg: "rgw_storage_interface is NOT defined. Please check glance node interfaces that satisfy with cidr {{ network_openstack.storage.cidr }}"
+
+- name: Glance related config
+  template:
+    src: glance-api.conf.j2
+    dest: /etc/glance/glance-api.conf
+    owner: root
+    group: glance
+    mode: 0640
+  notify: Restart Glance services
+
+- name: Create glance log path
+  file:
+    path: "{{ glance_log_path }}"
+    owner: glance
+    group: glance
+    state: directory
+    recurse: true
+
+- name: Make sure ceph directory which under etc is exist
+  file:
+    path: "/etc/ceph"
+    owner: root
+    group: root
+    state: directory
+
+- name: Glance related ceph key and config
+  template:
+    src: "{{ inventory_dir }}/tmp/{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'ceph.conf', dest: '/etc/ceph/ceph.conf' }
+    - { src: 'ceph.client.glance.keyring', dest: '/etc/ceph/ceph.client.glance.keyring' }
+  when:
+    - backend_openstack.glance.stores is defined
+    - backend_openstack.glance.stores
+    - "'rbd' in backend_openstack.glance.stores or 'swift' in backend_openstack.glance.stores"
+
+- name: Change file owner and group
+  file:
+    path: /etc/ceph/ceph.client.glance.keyring
+    owner: glance
+    group: glance
+  when:
+    - backend_openstack.glance.stores is defined
+    - backend_openstack.glance.stores
+    - "'rbd' in backend_openstack.glance.stores or 'swift' in backend_openstack.glance.stores"

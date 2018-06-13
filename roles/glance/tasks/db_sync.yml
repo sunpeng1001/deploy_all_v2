@@ -1,0 +1,8 @@
+---
+# role/glance/tasks/db_sync.yml
+
+- name: Init glance database
+  shell: '/bin/sh -c "glance-manage db_sync"'
+  become: true
+  become_user: glance
+  run_once: true

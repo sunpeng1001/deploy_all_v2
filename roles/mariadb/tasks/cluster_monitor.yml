@@ -1,0 +1,22 @@
+---
+- name: Copy file clustercheck
+  template:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    mode: '{{ item.mode }}'
+  loop:
+    - { src: 'mariadbcheck.j2', dest: '/etc/xinetd.d/mariadbcheck', mode: '0755' }
+    - { src: 'clustercheck.j2', dest: '/usr/bin/clustercheck', mode: '0755' }
+
+- name: Edit /etc/services
+  lineinfile:
+    dest: '{{ item.dest }}'
+    line: '{{ item.line }}'
+  loop:
+    - { dest: '/etc/services', line: 'mariadbcheck    {{ mariadb.port_cluster_check }}/tcp     #mariadbcheck' }
+
+- name: Restart xinetd
+  service:
+    name: xinetd
+    state: restarted
+    enabled: yes

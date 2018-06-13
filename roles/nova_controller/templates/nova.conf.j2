@@ -1,0 +1,126 @@
+[DEFAULT]
+osapi_compute_workers = 8
+metadata_workers = 8
+debug=True
+enabled_apis=osapi_compute,metadata
+my_ip = {{ hostvars[inventory_hostname]['ansible_' + network_openstack.management.interface]['ipv4']['address'] }}
+use_neutron = True
+linuxnet_interface_driver = nova.network.linux_net.LinuxOVSInterfaceDriver
+firewall_driver = nova.virt.firewall.NoopFirewallDriver
+cpu_allocation_ratio=1.5
+disk_allocation_ratio=1.0
+ram_allocation_ratio=1.0
+default_availability_zone=nova
+report_interval=10
+osapi_compute_listen = $my_ip
+osapi_compute_listen_port = {{ openstack_nova.port.api }}
+metadata_listen = $my_ip
+metadata_listen_port = {{ openstack_nova.port.api_metadata }}
+instance_name_template = instance-%(uuid)s
+transport_url = rabbit://{{ nova_rabbit_servers }}
+dhcp_domain =
+
+[api]
+auth_strategy = keystone
+
+[conductor]
+workers = 8
+
+[api_database]
+connection = mysql+pymysql://{{ openstack_nova.db.user }}:{{ openstack_nova.db.password }}@{{ db_host }}:{{ db_port }}/nova_api
+
+[database]
+connection = mysql+pymysql://{{ openstack_nova.db.user }}:{{ openstack_nova.db.password }}@{{ db_host }}:{{ db_port }}/nova
+min_pool_size = 100
+max_pool_size = 200
+max_overflow = 50
+connection_recycle_time = 1800
+
+[keystone_authtoken]
+auth_uri = http://{{ auth_public_host }}:{{ auth_public_port }}
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}
+memcached_servers = {{ memcached_servers }}
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = nova
+password = {{ openstack_nova.auth.password }}
+
+[oslo_messaging_rabbit]
+rabbit_retry_interval=1
+rabbit_retry_backoff=2
+rabbit_max_retries=0
+rabbit_ha_queues=true
+amqp_durable_queues=true
+
+[cache]
+enabled = true
+backend = oslo_cache.memcache_pool
+memcache_servers = {{ memcached_servers }}
+
+[glance]
+api_servers = http://{{ glance_api_host }}:{{ glance_api_port }}
+
+[oslo_concurrency]
+lock_path = /var/lib/nova/tmp
+
+[neutron]
+url = http://{{ neutron_server_host }}:{{ neutron_server_port }}
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+region_name = RegionOne
+project_name = service
+username = neutron
+password = {{ openstack_neutron.auth.password }}
+
+service_metadata_proxy = True
+metadata_proxy_shared_secret = {{ metadata_secret }}
+
+[cinder]
+os_region_name = RegionOne
+
+[placement]
+os_region_name = RegionOne
+project_domain_name = Default
+project_name = service
+auth_type = password
+user_domain_name = Default
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}/v3
+
+username = placement
+password = {{ openstack_placement.auth.password }}
+
+[scheduler]
+driver=filter_scheduler
+discover_hosts_in_cells_interval = 300
+
+[filter_scheduler]
+max_instances_per_host=30
+available_filters=nova.scheduler.filters.all_filters
+enabled_filters=RetryFilter, AvailabilityZoneFilter, AggregateRamFilter, AggregateDiskFilter, ComputeFilter, ComputeCapabilitiesFilter, ImagePropertiesFilter, ServerGroupAntiAffinityFilter, ServerGroupAffinityFilter, AggregateCoreFilter, NumInstancesFilter, SameHostFilter, DifferentHostFilter
+
+[quota]
+instances = -1
+cores = -1
+ram = -1
+key_pairs = 500
+server_groups = -1
+server_group_members = -1
+
+[wsgi]
+api_paste_config=api-paste.ini
+
+[oslo_messaging_notifications]
+driver=noop
+
+[ironic]
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}/v3
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = ironic
+password = {{ openstack_ironic.auth.password }}

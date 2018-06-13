@@ -1,0 +1,10 @@
+---
+# roles/keystone/tasks/config.yml
+
+- name: Config /etc/keystone/keystone.conf
+  template:
+    src: keystone.conf.j2
+    dest: /etc/keystone/keystone.conf
+    owner: root
+    group: keystone
+    mode: 0640

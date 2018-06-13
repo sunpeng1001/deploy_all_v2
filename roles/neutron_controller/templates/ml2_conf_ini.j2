@@ -1,0 +1,30 @@
+[DEFAULT]
+
+[ml2]
+type_drivers = flat,vlan,vxlan
+{% if network_openstack.tenant.network_type is not defined or network_openstack.tenant.network_type == 'vlan' or not network_openstack.tenant.network_type %}
+tenant_network_types = vlan
+{% else %}
+tenant_network_types = vxlan
+{% endif %}
+mechanism_drivers = openvswitch,l2population
+extension_drivers = port_security,dns,qos
+physical_network_mtus = external:1500
+
+[ml2_type_flat]
+flat_networks = *
+
+{% if network_openstack.tenant.network_type is not defined or network_openstack.tenant.network_type == 'vlan' or not network_openstack.tenant.network_type %}
+[ml2_type_vlan]
+network_vlan_ranges = tenant:{{ network_openstack_compute.tenant.vlan_range }},external:{{ network_openstack_compute.public.vlan_range }}
+{% else %}
+[ml2_type_vlan]
+network_vlan_ranges = external:{{ network_openstack_compute.public.vlan_range }}
+
+[ml2_type_vxlan]
+vni_ranges = 1:10000
+{% endif %}
+
+
+[securitygroup]
+enable_ipset = True

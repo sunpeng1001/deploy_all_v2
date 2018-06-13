@@ -1,0 +1,6 @@
+---
+- name: Make sure memcached is running and enabled
+  service:
+    name: memcached
+    state: started
+    enabled: true

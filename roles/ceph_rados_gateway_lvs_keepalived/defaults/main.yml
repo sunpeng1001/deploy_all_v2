@@ -1,0 +1,8 @@
+---
+
+#ip and port
+virtual_ipaddress: "{{ network_ceph_rados_gateway.provision.vip }}"
+virtual_port: "{{ ceph_rados_gateway.port }}"
+
+master: "{{ groups['ceph_rados_gateway_ha'] | min }}"
+slave: "{{ groups['ceph_rados_gateway_ha'] | max }}"

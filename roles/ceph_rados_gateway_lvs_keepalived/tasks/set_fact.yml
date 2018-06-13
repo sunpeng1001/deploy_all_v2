@@ -1,0 +1,10 @@
+---
+- name: Get the target interface to bind vip
+  set_fact:
+    target_vip_interface: "{{ item }}"
+  when:
+    - hostvars[inventory_hostname]['ansible_' + item]['ipv4'] is defined
+    - hostvars[inventory_hostname]['ansible_' + item]['ipv4']['network'] == network_ceph_rados_gateway.provision.cidr|ipaddr('network')
+    - hostvars[inventory_hostname]['ansible_' + item]['ipv4']['netmask'] == network_ceph_rados_gateway.provision.cidr|ipaddr('netmask')
+  loop: "{{ ansible_interfaces }}"
+  run_once: true

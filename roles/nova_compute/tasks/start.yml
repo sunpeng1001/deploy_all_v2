@@ -1,0 +1,19 @@
+---
+- name: Be sure ksm and ksmtuned service is not running and disabled
+  service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop:
+    - ksmtuned
+    - ksm
+  ignore_errors: true
+
+- name: Be sure nova and libvirtd service is running and enabled
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - libvirtd
+    - openstack-nova-compute

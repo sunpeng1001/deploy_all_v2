@@ -1,0 +1,17 @@
+---
+- name: Be sure httpd service is running and enabled
+  service:
+    name: httpd
+    state: started
+    enabled: true
+ 
+- name: Be sure nova service is running and enabled
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - openstack-nova-api
+    - openstack-nova-consoleauth
+    - openstack-nova-scheduler
+    - openstack-nova-conductor

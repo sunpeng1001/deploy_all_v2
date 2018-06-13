@@ -1,0 +1,14 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: Make sure folders are exist for ansible playbooks
+      file:
+        path: "{{ inventory_dir }}/{{ item }}"
+        state: directory
+      loop:
+        - logs
+        - facts
+        - tmp
+      run_once: true
+      delegate_to: 127.0.0.1

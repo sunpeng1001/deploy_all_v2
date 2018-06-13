@@ -1,0 +1,18 @@
+---
+#group_vars/mariadb
+
+work_path: '/data'
+galera_version: 'galera-25.3.20-1.rhel7.el7.centos.x86_64.rpm'
+percona_xtrabackup: 'percona-xtrabackup-24'
+mariadb_pkg: 'mariadb-10.1.22-linux-systemd-x86_64.tar.gz'
+mariadb_version: 'mariadb-10.1.22-linux-systemd-x86_64'
+down_url:
+  - 'http://{{ yum_server }}/ctyun/mariadb/mariadb-10.1.22-linux-systemd-x86_64.tar.gz'
+  - 'http://{{ yum_server }}/ctyun/mariadb/galera-25.3.20-1.rhel7.el7.centos.x86_64.rpm'
+disk_name: '/dev/sdb'
+disk_path: '/data'
+disk_type: 'xfs'
+disk_vars: 'noatime,nodiratime,nobarrier,defaults'
+
+#If it's not the hybrid deploy ,this Configuration is 70% of physical memory
+innodb_buffer_pool_size: 1G

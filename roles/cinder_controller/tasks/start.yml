@@ -1,0 +1,9 @@
+---
+- name: Start openstack-cinder-api.service openstack-cinder-scheduler.service service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - openstack-cinder-api.service
+    - openstack-cinder-scheduler.service

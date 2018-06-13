@@ -1,0 +1,6 @@
+PORT={{ memcached.port }}
+USER=memcached
+MAXCONN=1024
+CACHESIZE=64
+OPTIONS=-l {{ hostvars[inventory_hostname]['ansible_' + network_openstack.management.interface]['ipv4']['address'] }}
+# -l allows you to bind to specific interfaces or IP addresses.

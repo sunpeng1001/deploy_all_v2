@@ -1,0 +1,20 @@
+---
+- import_tasks: iptables.yml
+  tags:
+    - ceph_rados_gateway_lvs_keepalived_iptables
+
+- import_tasks: install.yml
+  tags:
+    - ceph_rados_gateway_lvs_keepalived_install
+
+- import_tasks: set_fact.yml
+  tags:
+    - ceph_rados_gateway_lvs_keepalived_set_fact
+
+- import_tasks: config.yml
+  tags:
+    - ceph_rados_gateway_lvs_keepalived_config
+
+- import_tasks: start.yml
+  tags:
+    - ceph_rados_gateway_lvs_keepalived_start

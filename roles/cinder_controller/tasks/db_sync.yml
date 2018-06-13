@@ -1,0 +1,6 @@
+---
+- name: Init cinder database
+  shell: "/bin/sh -c 'cinder-manage db sync'"
+  become: true
+  become_user: cinder
+  run_once: true

@@ -1,0 +1,8 @@
+---
+# roles/ironic/tasks/start_xinetd.yml
+
+- name: Be sure service is enabled and started
+  service:
+    name: xinetd
+    state: started
+    enabled: true

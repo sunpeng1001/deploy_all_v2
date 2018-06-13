@@ -1,0 +1,19 @@
+---
+- name: Base packages install
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openstack-selinux
+    - MySQL-python
+    - python-shade
+
+- name: Openstack-ironic-inspector packages install
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openstack-ironic-inspector
+    - tftp-server
+    - syslinux-tftpboot
+    - xinetd

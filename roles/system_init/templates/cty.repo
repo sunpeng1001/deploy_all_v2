@@ -1,0 +1,120 @@
+[CTyun-Yum-OpenStack-Newton]
+name=CentOS-$releasever - Newton
+baseurl=http://{{ yum_server }}/ctyun/centos/$releasever/cloud/$basearch/openstack-newton/
+gpgcheck=0
+enabled=0
+
+[CTyun-Yum-OpenStack-Ocata]
+name=CentOS-$releasever - Ocata
+baseurl=http://{{ yum_server }}/ctyun/centos/$releasever/cloud/$basearch/openstack-ocata/
+gpgcheck=0
+enabled=0
+
+[CTyun-Yum-OpenStack-Pike]
+name=CentOS-$releasever - Pike
+baseurl=http://{{ yum_server }}/ctyun/centos/$releasever/cloud/$basearch/openstack-pike/
+gpgcheck=0
+enabled=0
+
+[CTyun-Yum-OpenStack-Queens]
+name=CentOS-$releasever - Pike
+baseurl=http://{{ yum_server }}/ctyun/centos/$releasever/cloud/$basearch/openstack-queens/
+gpgcheck=0
+enabled=1
+
+[CTyun-Yum-Base]
+name=CentOS-$releasever - Base
+baseurl=http://{{ yum_server }}/ctyun/centos/$releasever/os/$basearch/
+gpgcheck=0
+enabled=1
+
+[CTyun-Yum-Updates]
+name=CentOS-$releasever - Updates
+baseurl=http://{{ yum_server }}/ctyun/centos/$releasever/updates/$basearch/
+gpgcheck=0
+enabled=1
+
+[CTyun-Yum-Extras]
+name=CentOS-$releasever - Extras
+baseurl=http://{{ yum_server }}/ctyun/centos/$releasever/extras/$basearch/
+gpgcheck=0
+enabled=1
+
+[CTyun-Yum-Qemu-Ev]
+name=CentOS-$releasever - QEMU EV
+baseurl=http://{{ yum_server }}/ctyun/centos/$releasever/virt/$basearch/kvm-common/
+gpgcheck=0
+enabled=1
+
+[CTyun-Yum-Ceph-Jewel]
+name=CentOS-$releasever - Ceph Jewel
+baseurl=http://{{ yum_server }}/ctyun/centos/$releasever/storage/$basearch/ceph-jewel/
+gpgcheck=0
+enabled=0
+
+[CTyun-Yum-epel]
+name=CentOS-$releasever - epel
+baseurl=http://{{ yum_server }}/ctyun/epel/$releasever/$basearch/
+failovermethod=priority
+gpgcheck=0
+enabled=1
+
+[CTyun-Yum-Zabbix]
+name=Zabbix Official Repository - $basearch
+baseurl=http://{{ yum_server }}/ctyun/zabbix/3.0/rhel/$releasever/$basearch/
+enabled=1
+gpgcheck=0
+
+[CTyun-Yum-Zabbix-Non-Supported]
+name=Zabbix Official Repository non-supported - $basearch
+baseurl=http://{{ yum_server }}/ctyun/zabbix/3.0/rhel/$releasever/non-supported/
+enabled=1
+gpgcheck=0
+
+[CTyun-Yum-Ceph-10]
+name=CentOS-$releasever - Ceph
+baseurl=http://{{ yum_server }}/ctyun/Ceph/
+gpgcheck=0
+enabled=1
+
+[CTyun-Yum-Ceph-Rpm-Jewel]
+name=CentOS-$releasever - Ceph Jewel
+baseurl=http://{{ yum_server }}/ctyun/Ceph/rpm-jewel/
+gpgcheck=0
+enabled=1
+
+[CTyun-Yum-CentOS-elkstack]
+name=CentOS-elkstack
+baseurl=http://{{ yum_server }}/ctyun/elkstack/2.4/
+gpgcheck=0
+enabled=0
+
+[CTyun-Yum-CentOS-elkstack]
+name=CentOS-elkstack
+baseurl=http://{{ yum_server }}/ctyun/elkstack/5.5/
+gpgcheck=0
+enabled=1
+
+[CTyun-Yum-Ceph-12]
+name=CentOS-$releasever - Ceph
+baseurl=http://{{ yum_server }}/ctyun/rpm-luminous/el7/$basearch/
+gpgcheck=0
+enabled=0
+
+[CTyun-Yum-Ceph-Rpm-Luminous]
+name=CentOS-$releasever - Ceph luminous
+baseurl=http://{{ yum_server }}/ctyun/rpm-luminous/el7/noarch/
+gpgcheck=0
+enabled=0
+
+[CTyun-Yum-MariaDB-Percona]
+name=CentOS-$releasever - percona
+baseurl=http://{{ yum_server }}/ctyun/percona/
+gpgcheck=0
+enabled=1
+
+[CTyun-Yum-Ironic]
+name=CentOS-$releasever - ironic
+baseurl=http://{{ yum_server }}/ctyun/ironic/
+gpgcheck=0
+enabled=1

@@ -1,0 +1,3 @@
+---
+#ntp server host
+ntp_server_host: "{{ ntp_server }}"

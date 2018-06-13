@@ -1,0 +1,29 @@
+---
+- import_tasks: iptables.yml
+  tags:
+    - rabbitmq_iptables
+
+- import_tasks: install.yml
+  tags:
+    - rabbitmq_install
+
+- import_tasks: config.yml
+  tags:
+    - rabbitmq_config
+
+- import_tasks: create_cluster.yml
+  when: ansible_play_batch|length > 1
+  tags:
+    - rabbitmq_create_cluster
+
+- import_tasks: add_user.yml
+  tags:
+    - rabbitmq_add_user
+
+- import_tasks: plugin.yml
+  tags:
+    - rabbitmq_plugin
+
+- import_tasks: start.yml
+  tags:
+    - rabbitmq_start

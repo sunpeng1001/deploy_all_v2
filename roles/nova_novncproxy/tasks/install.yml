@@ -1,0 +1,8 @@
+---
+- name: Nova_novncproxy packages install
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openstack-nova-novncproxy
+    - openstack-selinux

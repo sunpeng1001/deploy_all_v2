@@ -1,0 +1,115 @@
+[DEFAULT]
+debug = True
+default_network_interface = neutron
+enabled_vendor_interfaces = ipmitool,no-vendor
+enabled_storage_interfaces = cinder,noop
+enabled_raid_interfaces = agent,no-raid
+enabled_power_interfaces = ipmitool
+enabled_network_interfaces = flat,noop,neutron
+enabled_management_interfaces = ipmitool
+enabled_inspect_interfaces = no-inspect
+enabled_deploy_interfaces = iscsi,direct
+enabled_console_interfaces = no-console
+enabled_boot_interfaces = pxe
+enabled_hardware_types = ipmi
+enabled_drivers = pxe_ipmitool,agent_ipmitool,pxe_ipmitool_socat,agent_ipmitool_socat
+auth_strategy = keystone
+transport_url = rabbit://{{ other_rabbit_servers }}
+
+[conductor]
+clean_callback_timeout = 0
+automated_clean = false
+api_url = http://{{ ironic_api_provision_host }}:{{ ironic_api_provision_port }}
+
+[database]
+connection = mysql+pymysql://ironic:{{ openstack_ironic.db.password }}@{{ db_host }}:{{ db_port }}/ironic?charset=utf8
+min_pool_size = 100
+max_pool_size = 200
+max_overflow = 50
+connection_recycle_time = 1800
+
+[deploy]
+object_store_endpoint_type = swift
+http_url = http://{{ hostvars[inventory_hostname]['ansible_' + network_openstack_baremetal.provision.interface]['ipv4']['address'] }}:80
+http_root = /httpboot
+shred_final_overwrite_with_zeros = true
+shred_random_overwrite_iterations = 0
+continue_if_disk_secure_erase_fails = true
+power_off_after_deploy_failure = false
+erase_devices_priority  = 0
+
+[glance]
+swift_account = AUTH_GLANCE_USERNAME
+swift_temp_url_key = TEMP_URL_KEY
+swift_endpoint_url = http://{{ hostvars[groups.ceph_rados_gateway.0]['ansible_' + rgw_provision_interface]['ipv4']['address'] }}:{{ ceph_rados_gateway.port }}/swift
+swift_api_version = v1
+swift_container = glance
+temp_url_endpoint_type = swift
+user_domain_name = default
+project_domain_name = default
+project_name = service
+password = {{ openstack_ironic.auth.password }}
+username = ironic
+auth_url = http://{{ auth_public_host }}:{{ auth_public_port }}
+auth_type = password
+glance_host = {{ glance_api_host }}
+glance_port = {{ glance_api_port }}
+
+[inspector]
+enabled = true
+auth_type = password
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}/v3
+username = ironic
+password = {{ openstack_ironic.auth.password }}
+project_name = service
+project_domain_name = default
+user_domain_name = default
+
+[ipmi]
+command_retry_timeout = 120
+
+[keystone_authtoken]
+user_domain_name = default
+project_domain_name = default
+project_name = service
+password = {{ openstack_ironic.auth.password }}
+username = ironic
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}
+auth_uri = http://{{ auth_public_host }}:{{ auth_public_port }}
+auth_type = password
+
+[neutron]
+provisioning_network = {{ net_create.network.id }}
+cleaning_network = {{ net_create.network.id }}
+user_domain_name = default
+project_domain_name = default
+project_name = service
+password = {{ openstack_ironic.auth.password }}
+username = ironic
+auth_url = http://{{ auth_public_host }}:{{ auth_public_port }}
+auth_type = password
+url = http://{{ neutron_server_host }}:{{ neutron_server_port }}
+
+[pxe]
+ipxe_use_swift = True
+uefi_pxe_config_template = $pybasedir/drivers/modules/ipxe_config.template
+pxe_config_template = $pybasedir/drivers/modules/ipxe_config.template
+uefi_pxe_bootfile_name = ipxe.efi
+pxe_bootfile_name = undionly.kpxe
+ipxe_enabled = True
+tftp_server = {{ hostvars[inventory_hostname]['ansible_' + network_openstack_baremetal.provision.interface]['ipv4']['address'] }}
+tftp_root = /tftpboot
+
+[service_catalog]
+user_domain_name = default
+project_domain_name = default
+project_name = service
+password = {{ openstack_ironic.auth.password }}
+username = ironic
+auth_url = http://{{ auth_public_host }}:{{ auth_public_port }}
+auth_type = password
+
+[agent]
+deploy_logs_collect = always
+deploy_logs_storage_backend = local
+deploy_logs_local_path = {{ log_path }}/ironic/deploy

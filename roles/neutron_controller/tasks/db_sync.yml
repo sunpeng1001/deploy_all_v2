@@ -1,0 +1,6 @@
+---
+- name: Init neutron database
+  shell: /bin/sh -c "neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head"
+  become: true
+  become_user: neutron
+  run_once: true

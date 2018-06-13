@@ -1,0 +1,10 @@
+---
+# roles/system_init/tasks/selinux_disable.yml
+- name: Disable SELinux at next reboot
+  selinux:
+    state: disabled
+
+- name: Set SELinux in permissive mode until the machine is rebooted
+  shell: setenforce 0
+  ignore_errors: true
+  changed_when: false

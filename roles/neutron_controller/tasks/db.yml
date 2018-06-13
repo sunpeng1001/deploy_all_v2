@@ -1,0 +1,10 @@
+---
+- name: Configure MySQL user (neutron)
+  include_tasks: "{{ playbook_dir }}/common-tasks/mysql_db_user.yml"
+  vars:
+    mysql_user_name: "{{ openstack_neutron.db.user }}"
+    mysql_user_password: "{{ openstack_neutron.db.password }}"
+    mysql_login_host: "{{ db_host }}"
+    mysql_login_port: "{{ db_port }}"
+    mysql_db_name: "{{ openstack_neutron.db.database }}"
+  run_once: yes

@@ -1,0 +1,43 @@
+---
+# roles/glance/tasks/main.yml
+
+- import_tasks: pre_install.yml
+  tags:
+    - glance_pre_install
+
+- import_tasks: install.yml
+  tags:
+    - glance_install
+
+- import_tasks: db.yml
+  run_once: true
+  tags:
+    - glance_db
+
+- import_tasks: auth.yml
+  tags: glance_auth
+  run_once: true
+
+- import_tasks: iptables.yml
+  tags:
+    - glance_iptables
+
+- include_tasks: ha.yml
+  loop: "{{ groups['os_ha'] }}"
+  loop_control:
+    loop_var: outer_item
+  tags:
+    - glance_ha
+
+- import_tasks: config.yml
+  tags:
+    - glance_config
+
+- import_tasks: db_sync.yml
+  tags:
+    - glance_db_sync
+
+- import_tasks: start.yml
+  tags:
+    - glance_start
+

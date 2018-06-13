@@ -1,0 +1,14 @@
+---
+# roles/keystone/handlers/main.yml
+
+- name: Delete tmp keystone keys
+  file:
+    name: "{{ inventory_dir }}/{{ item }}"
+    state: absent
+  loop:
+    - "tmp/credential-keys-0"
+    - "tmp/credential-keys-1"
+    - "tmp/fernet-keys-0"
+    - "tmp/fernet-keys-1"
+  delegate_to: 127.0.0.1
+  run_once: true

@@ -1,0 +1,6 @@
+---
+- name: Be sure openstack-nova-novncproxy is running and enabled
+  service:
+    name: openstack-nova-novncproxy
+    state: started
+    enabled: true

@@ -1,0 +1,2 @@
+---
+cinder_log_path: "{{ log_path }}/cinder"

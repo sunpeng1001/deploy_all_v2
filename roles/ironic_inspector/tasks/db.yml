@@ -1,0 +1,12 @@
+---
+- name: Configure MySQL for ironic-inspector
+  include_tasks: "{{ playbook_dir }}/common-tasks/mysql_db_user.yml"
+  vars:
+    mysql_user_name: "{{ openstack_ironic_inspector.db.user }}"
+    mysql_user_password: "{{ openstack_ironic_inspector.db.password }}"
+    mysql_login_host: "{{ db_host }}"
+    mysql_login_port: "{{ db_port }}"
+    mysql_db_name: "{{ openstack_ironic_inspector.db.database }}"
+  run_once: true
+  tags:
+    - ironic_inspector_db

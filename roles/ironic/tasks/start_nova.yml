@@ -1,0 +1,11 @@
+---
+# roles/ironic/tasks/start_nova.yml
+
+- name: Be sure nova-compute is enabled and started
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - openstack-nova-compute
+    - openstack-nova-serialproxy

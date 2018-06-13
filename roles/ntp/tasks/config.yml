@@ -1,0 +1,15 @@
+---
+- name: Copy the ntpd configuration file
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+  notify: Restart ntpd
+
+- name: Be sure ntpd is stop
+  service:
+    name: ntpd
+    state: stopped
+
+- name: Init sync time
+  shell: ntpdate {{ ntp_server_host }}
+  ignore_errors: True

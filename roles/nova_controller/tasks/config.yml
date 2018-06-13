@@ -1,0 +1,47 @@
+---
+- name: Create log path
+  file:
+    path: "{{ log_path }}"
+    owner: root
+    group: root
+    state: directory
+
+- name: Create nova log path
+  file:
+    path: "{{ nova_log_path }}"
+    owner: nova
+    group: nova
+    state: directory
+    recurse: yes
+
+- name: Modify nova log path
+  shell: '{{ item }}'
+  loop:
+    - 'sed -i "s#nova-api.*\$#nova-api --log-file {{ nova_log_path }}/nova-api.log#g" /usr/lib/systemd/system/openstack-nova-api.service'
+    - 'sed -i "s#nova-consoleauth.*\$#nova-consoleauth --log-file {{ nova_log_path }}/nova-consoleauth.log#g" /usr/lib/systemd/system/openstack-nova-consoleauth.service'
+    - 'sed -i "s#nova-scheduler.*\$#nova-scheduler --log-file {{ nova_log_path }}/nova-scheduler.log#g" /usr/lib/systemd/system/openstack-nova-scheduler.service'
+    - 'sed -i "s#nova-conductor.*\$#nova-conductor --log-file {{ nova_log_path }}/nova-conductor.log#g" /usr/lib/systemd/system/openstack-nova-conductor.service'
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true
+
+- name: Nova config
+  template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    mode: 0640
+  notify:
+    - Restart nova services
+
+- name: Nova placement config
+  template:
+    src: 00-nova-placement-api.conf.j2
+    dest: /etc/httpd/conf.d/00-nova-placement-api.conf
+    owner: root
+    group: root
+    mode: 0640
+  notify:
+    - Restart httpd

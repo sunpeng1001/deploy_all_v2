@@ -1,0 +1,140 @@
+---
+# group_vars/all/default.yml
+
+# Log path for services
+log_path: "/var/log"
+
+# MariaDB global infos
+mariadb:
+  port: 18913
+  port_ha: 10024
+  port_cluster_check: 39000
+  admin:
+    user: "tempa"
+    password: "1wsad44FASQ2HJK"
+
+# Memcached global infos
+memcached:
+  port: 18888
+
+# RabbitMQ global infos
+rabbitmq:
+  port: 18889
+  user: "openstack"
+  password: "RABBIT_PASS"
+
+# OpenStack service global infos
+
+metadata_secret: "METADATA_SECRET"
+
+openstack_cinder:
+  port:
+    api: 18900
+    api_ha: 10014
+  auth:
+    user: "cinder"
+    password: "CINDER_PASS"
+  db:
+    database: "cinder"
+    user: "cinder"
+    password: "qazwsxedc"
+
+openstack_glance:
+  port:
+    api: 18894
+    api_ha: 10002
+    registry: 18895
+    registry_ha: 10004
+  auth:
+    user: "glance"
+    password: "GLANCE_PASS"
+  db:
+    database: "glance"
+    user: "glance"
+    password: "qazwsxedc"
+
+openstack_ironic:
+  port:
+    api: 6385
+    api_ha: 10032
+    api_provision_ha: 10028
+  auth:
+    user: "ironic"
+    password: "IRONIC_PASS"
+  db:
+    database: "ironic"
+    user: "ironic"
+    password: "qazwsxedc"
+
+openstack_ironic_inspector:
+  port:
+    api: 5050
+    api_ha: 5050
+  auth:
+    user: "ironic-inspector"
+    password: "inspector"
+  db:
+    database: "ironic_inspector"
+    user: "inspector"
+    password: "inspector"
+
+openstack_keystone:
+  port:
+    admin: 18896
+    admin_ha: 10006
+    internal: 18897
+    public: 18897
+    public_ha: 10008
+  auth:
+    user: admin
+    password: "ADMIN_PASS"
+  db:
+    database: "keystone"
+    user: "keystone"
+    password: "qazwsxedc"
+
+openstack_neutron:
+  port: 18912
+  port_ha: 10018
+  auth:
+    user: "neutron"
+    password: "NEUTRON_PASS"
+  db:
+    database: "neutron"
+    user: "neutron"
+    password: "qazwsxedc"
+
+openstack_nova:
+  port:
+    api: 18898
+    api_ha: 10010
+    api_metadata: 18899
+    api_metadata_ha: 10012
+    novncproxy: 18911
+    novncproxy_ha: 10016
+    serialproxy: 6083
+    serialproxy_ha: 10036
+  auth:
+    user: "nova"
+    password: "NOVA_PASS"
+  db:
+    databases:
+      - "nova"
+      - "nova_api"
+      - "nova_cell0"
+    user: "nova"
+    password: "qazwsxedc"
+
+openstack_placement:
+  port: 18887
+  port_ha: 10013
+  auth:
+    user: "placement"
+    password: "PLACEMENT_PASS"
+  db:
+    database: "placement"
+    user: "placement"
+    password: "qazwsxedc"
+
+ceph_rados_gateway:
+  port: 7480

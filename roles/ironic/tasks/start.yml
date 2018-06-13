@@ -1,0 +1,11 @@
+---
+# roles/ironic/tasks/start.yml
+
+- name: Be sure ironic serivces are enabled and started
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - openstack-ironic-api
+    - openstack-ironic-conductor

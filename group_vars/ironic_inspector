@@ -1,0 +1,4 @@
+---
+urls_of_ramdisk:
+  - http://{{ yum_server }}/ctyun/images/ironic-images/queens/coreos_production_pxe.vmlinuz
+  - http://{{ yum_server }}/ctyun/images/ironic-images/queens/coreos_production_pxe_image-oem.cpio.gz

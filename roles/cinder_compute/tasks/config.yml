@@ -1,0 +1,61 @@
+---
+- name: Create log path
+  file:
+    path: "{{ log_path }}"
+    owner: root
+    group: root
+    state: directory
+
+- name: Create cinder log path
+  file:
+    path: "{{ cinder_log_path }}"
+    owner: cinder
+    group: cinder
+    state: directory
+    recurse: true
+
+- name: Modify cinder log path
+  shell: "{{ item }}"
+  loop:
+    - 'sed -i "s#/var/log/cinder#{{ cinder_log_path }}#g" /usr/lib/systemd/system/openstack-cinder-volume.service'
+    - 'sed -i "s#/var/log/cinder#{{ cinder_log_path }}#g" /usr/lib/systemd/system/openstack-cinder-backup.service'
+
+- name: reload systemd
+  systemd:
+    daemon_reload: true
+
+- name: Copy cinder config
+  template:
+    src: cinder.conf.j2
+    dest: /etc/cinder/cinder.conf
+    owner: root
+    group: cinder
+    mode: 0640
+  notify:
+    - Restart cinder services
+
+- name: Copy cinder ceph key file
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: cinder
+    group: cinder
+    mode: 0644
+  loop:
+    - { src: '{{ inventory_dir }}/tmp/ceph.client.cinder-backup.keyring', dest: '/etc/ceph/ceph.client.cinder-backup.keyring' }
+    - { src: '{{ inventory_dir }}/tmp/ceph.client.cinder.keyring', dest: '/etc/ceph/ceph.client.cinder.keyring' }
+  notify:
+    - Restart cinder services
+  when: "'ceph' in backend_openstack.cinder.backends"
+
+- name: Copy ceph config file
+  copy:
+    src: "{{ inventory_dir }}/tmp/ceph.conf"
+    dest: /etc/ceph/ceph.conf
+    owner: root
+    group: root
+    mode: 0644
+    force: false
+  notify:
+    - Restart cinder services
+  when: "'ceph' in backend_openstack.cinder.backends"

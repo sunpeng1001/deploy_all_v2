@@ -1,0 +1,40 @@
+---
+- name: Config galera_new_cluster
+  copy:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    owner: mysql
+    group: mysql
+    mode: 0755
+    remote_src: '{{ item.remote_src }}'
+  loop:
+    - { src: '/tmp/galera_new_cluster', dest: '/usr/local/{{ mariadb_version }}/bin/galera_new_cluster', remote_src: 'yes' }
+
+- name: Edit /etc/profile
+  blockinfile:
+    path: '/etc/profile'
+    block: |
+      export PATH=$PATH:/usr/local/mysql/bin
+      export LD_LIBRARY_PATH=/usr/local/mysql/lib
+
+- name: Source profile
+  shell: "source /etc/profile"
+
+- name: Copy script files
+  template:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    mode: 0755
+  loop:
+    - { src: 'database_user_reinit.sh.j2', dest: '/usr/local/mysql/database_user_reinit.sh' }
+    - { src: 'db_user_rollback.sh.j2', dest: '/usr/local/mysql/db_user_rollback.sh' }
+    - { src: 'files/server_manager.sh', dest: '/usr/local/mysql/server_manager.sh' }
+    - { src: 'user_privage_check.py.j2', dest: '/usr/local/mysql/user_privage_check.py' }
+
+- name: Delete files
+  file:
+    path: '{{ item }}'
+    state: absent
+  loop:
+    - '/tmp/galera_new_cluster'
+    - '/usr/local/{{ mariadb_pkg }}'

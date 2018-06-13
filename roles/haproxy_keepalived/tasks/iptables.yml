@@ -1,0 +1,17 @@
+---
+- name: Config iptables admin web port
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    protocol: tcp
+    match: multiport
+    destination_port: "{{ haproxy_web_port }}"
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for haproxy web port {mark}"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -p tcp -m multiport --dport {{ haproxy_web_port }} -j ACCEPT

@@ -1,0 +1,15 @@
+[DEFAULT]
+debug=True
+transport_url = rabbit://{{ nova_rabbit_servers }}
+
+[oslo_messaging_rabbit]
+rabbit_retry_interval=1
+rabbit_retry_backoff=2
+rabbit_max_retries=0
+rabbit_ha_queues=true
+amqp_durable_queues=true
+
+[vnc]
+enabled = true
+novncproxy_host={{ hostvars[inventory_hostname]['ansible_' + network_openstack.management.interface]['ipv4']['address'] }}
+novncproxy_port={{ openstack_nova.port.novncproxy }}

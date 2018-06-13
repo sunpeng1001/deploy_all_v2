@@ -1,0 +1,28 @@
+---
+# roles/keystone/tasks/httpd.yml
+
+- name: Config apache
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: "^#*ServerName"
+    line: "ServerName {{ hostvars[inventory_hostname]['inventory_hostname'] }}"
+
+- name: Copy the wsgi-keystone.conf file
+  template:
+    src: wsgi-keystone.conf.j2
+    dest: /usr/share/keystone/wsgi-keystone.conf
+    owner: root
+    group: keystone
+    mode: 0644
+
+- name: Create a link to the /usr/share/keystone/wsgi-keystone.conf file
+  file:
+    src: /usr/share/keystone/wsgi-keystone.conf
+    dest: /etc/httpd/conf.d/wsgi-keystone.conf
+    state: link
+
+- name: Restart service httpd
+  service:
+    name: httpd
+    state: restarted
+    enabled: true

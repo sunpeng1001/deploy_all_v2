@@ -1,0 +1,4 @@
+---
+port_udp_dnsmasq_src_range: '67:68'
+port_udp_dnsmasq_dest_range: '67:68'
+port_udp_tftp: 69

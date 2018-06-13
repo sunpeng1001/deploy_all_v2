@@ -1,0 +1,3 @@
+---
+#log path variable
+nova_log_path: '{{ log_path }}/nova'

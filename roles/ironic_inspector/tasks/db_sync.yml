@@ -1,0 +1,3 @@
+---
+- name: Init inspector database
+  shell: 'ironic-inspector-dbsync --config-file /etc/ironic-inspector/inspector.conf upgrade'

@@ -1,0 +1,6 @@
+---
+- name: Make sure keepalived is started and enabled
+  service:
+    name: keepalived
+    state: started
+    enabled: true

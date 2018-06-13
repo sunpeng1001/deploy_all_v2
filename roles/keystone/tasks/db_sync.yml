@@ -1,0 +1,7 @@
+---
+# roles/keystone/tasks/db_sync.yml
+
+- name: Populate the Identity service database
+  shell: /bin/sh -c "keystone-manage --config-dir /etc/keystone db_sync"
+  become: true
+  become_user: keystone

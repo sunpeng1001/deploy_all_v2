@@ -1,0 +1,6 @@
+---
+# playbooks/openstack_keystone.yml
+
+- hosts: kgc_server
+  roles:
+    - keystone

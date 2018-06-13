@@ -1,0 +1,15 @@
+---
+- name: Install base packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python-openstackclient
+    - openstack-selinux
+    - MySQL-python
+    - python-shade
+
+- name: Install cinder packages
+  yum:
+    name: openstack-cinder
+    state: present

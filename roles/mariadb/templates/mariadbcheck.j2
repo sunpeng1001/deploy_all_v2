@@ -1,0 +1,16 @@
+# default: on
+# description: mariadbcheck
+service mariadbcheck
+{
+        disable = no
+        flags = REUSE
+        socket_type = stream
+        port = {{ mariadb.port_cluster_check }}
+        wait = no
+        user = nobody
+        server = /usr/bin/clustercheck
+        log_type = FILE /dev/null
+        log_on_failure += USERID
+        only_from = 0.0.0.0/0
+        per_source = UNLIMITED
+}

@@ -1,0 +1,4 @@
+---
+# roles/keystone/defaults/main.yml
+
+keystone_master: "{{ ansible_play_batch | min }}"

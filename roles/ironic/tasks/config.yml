@@ -1,0 +1,104 @@
+---
+# roles/ironic/tasks/config.yml
+
+- name: Make sure log path is exist
+  file:
+    path: "{{ log_path }}"
+    state: directory
+    owner: root
+    group: root
+
+- name: Create ironic log path
+  file:
+    path: "{{ log_path }}/ironic"
+    state: directory
+    owner: ironic
+    group: ironic
+    recurse: true
+
+- name: Create deploy logs local path
+  file:
+    path: "{{ log_path }}/ironic/deploy"
+    state: directory
+    owner: ironic
+    group: ironic
+    recurse: true
+
+- name: Modify openstack-ironic-api log path
+  replace:
+    path: /usr/lib/systemd/system/openstack-ironic-api.service
+    regexp: 'ironic-api.*$'
+    replace: 'ironic-api --log-file {{ log_path }}/ironic/ironic-api.log'
+
+- name: Modify openstack-ironic-conductor log path
+  replace:
+    path: /usr/lib/systemd/system/openstack-ironic-conductor.service
+    regexp: 'ironic-conductor.*$'
+    replace: 'ironic-conductor --log-file {{ log_path }}/ironic/ironic-conductor.log'
+
+- name: Force systemd to reread configs
+  systemd:
+    daemon_reload: true
+
+- name: Gather facts for {{ groups['ceph_rados_gateway'][0] }}
+  setup:
+  delegate_to: "{{ groups['ceph_rados_gateway'][0] }}"
+  delegate_facts: true
+  run_once: true
+
+- block:
+  - name: create ironic provison network
+    os_network:
+      state: present
+      name: IronicNet
+      provider_network_type: "vlan"
+      provider_physical_network: "tenant"
+      provider_segmentation_id: "{{ network_openstack_baremetal.provision.vlan_id }}"
+    register: net_create
+
+  - name: create ironic provision subnet
+    os_subnet:
+      state: present
+      network_name: IronicNet
+      name: ironic-subnet
+      ip_version: 4
+      cidr: "{{ network_openstack_baremetal.provision.cidr }}"
+      allocation_pool_start: "{{ network_openstack_baremetal.provision.dhcp_range_start }}"
+      allocation_pool_end: "{{ network_openstack_baremetal.provision.dhcp_range_end }}"
+
+  environment:
+    OS_PROJECT_DOMAIN_NAME: default
+    OS_USER_DOMAIN_NAME: default
+    OS_PROJECT_NAME: admin
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ openstack_keystone.auth.password }}"
+    OS_AUTH_URL: "http://{{ auth_admin_host }}:{{ auth_admin_port }}/v3"
+    OS_IDENTITY_API_VERSION: 3
+    OS_IMAGE_API_VERSION: 2
+  run_once: true
+
+- name: Get interface for provision network
+  set_fact:
+    rgw_provision_interface: "{{ item }}"
+  when:
+    - hostvars[groups.ceph_rados_gateway.0]['ansible_' + item]['ipv4'] is defined
+    - hostvars[groups.ceph_rados_gateway.0]['ansible_' + item]['ipv4']['network'] == network_openstack_baremetal.provision.cidr|ipaddr('network')
+    - hostvars[groups.ceph_rados_gateway.0]['ansible_' + item]['ipv4']['netmask'] == network_openstack_baremetal.provision.cidr|ipaddr('netmask')
+  loop: "{{ hostvars[groups.ceph_rados_gateway.0].ansible_interfaces }}"
+  run_once: true
+
+- name: Make sure variable rgw_provision_interface is defined
+  assert:
+    that:
+      - rgw_provision_interface is defined
+    msg: "rgw_provision_interface is NOT defined. Please check ironic node interfaces that satisfy with cidr {{ network_openstack_baremetal.provision.cidr }}"
+
+- name: Config /etc/ironic/ironic.conf
+  template:
+    src: ironic.conf.j2
+    dest: /etc/ironic/ironic.conf
+    owner: root
+    group: ironic
+    mode: 0644
+  notify:
+    - Restart ironic services

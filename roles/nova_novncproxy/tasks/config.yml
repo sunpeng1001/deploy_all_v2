@@ -1,0 +1,33 @@
+---
+- name: Create log path
+  file:
+    path: "{{ log_path }}"
+    owner: root
+    group: root
+    state: directory
+
+- name: Create nova log path
+  file:
+    path: "{{ nova_log_path }}"
+    owner: nova
+    group: nova
+    state: directory
+    recurse: true
+
+- name: Modify nova log path
+  shell: '{{ item }}'
+  loop:
+    - 'sed -i "s#nova-novncproxy.*\$#nova-novncproxy --log-file {{ nova_log_path }}/nova-novncproxy.log#g" /usr/lib/systemd/system/openstack-nova-novncproxy.service'
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true
+
+- name: Nova_novncproxy config
+  template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    mode: 0640
+  notify: Restart openstack-nova-novncproxy

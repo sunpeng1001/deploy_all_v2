@@ -1,0 +1,8 @@
+---
+# roles/glance/tasks/start.yml
+
+- name: Start openstack-glance-api and openstack-glance-regitry service
+  service:
+    name: openstack-glance-api
+    state: started
+    enabled: true

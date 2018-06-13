@@ -1,0 +1,10 @@
+---
+- name: Config /etc/ironic-inspector/inspector.conf
+  template:
+    src: inspector.conf.j2
+    dest: /etc/ironic-inspector/inspector.conf
+    owner: root
+    group: ironic-inspector
+    mode: 0640
+  notify:
+    - Restart openstack-ironic-inspector

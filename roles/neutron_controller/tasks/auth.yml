@@ -1,0 +1,12 @@
+---
+- import_tasks: "{{ playbook_dir }}/common-tasks/create_service_credentials_and_endpoints.yml"
+  vars:
+    user_name: "{{ openstack_neutron.auth.user }}"
+    user_password: "{{ openstack_neutron.auth.password }}"
+    service_type: "network"
+    service_description: "OpenStack Neutron"
+    service_host: "{{ neutron_server_host }}"
+    service_port: "{{ neutron_server_port }}"
+  run_once: true
+  tags:
+    - neutron_controller_auth

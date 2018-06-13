@@ -1,0 +1,20 @@
+---
+- name: Base packages install
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python-openstackclient
+    - openstack-selinux
+    - python2-shade
+    - MySQL-python
+    - python-shade
+
+- name: Nova packages install
+  yum: name={{ item }} state=present
+  loop:
+    - openstack-nova-api
+    - openstack-nova-conductor
+    - openstack-nova-console
+    - openstack-nova-scheduler
+    - openstack-nova-placement-api

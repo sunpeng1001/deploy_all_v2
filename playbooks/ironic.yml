@@ -1,0 +1,4 @@
+---
+- hosts: ironic
+  roles:
+    - ironic

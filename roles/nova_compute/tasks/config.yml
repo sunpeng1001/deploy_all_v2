@@ -1,0 +1,115 @@
+---
+- name: Make sure nova log path is exist
+  file:
+    path: "{{ nova_log_path }}"
+    state: directory
+    owner: nova
+    group: nova
+    mode: 0750
+
+- name: Modify nova log path
+  shell: 'sed -i "s#nova-compute.*\$#nova-compute --log-file {{ nova_log_path }}/nova-compute.log#g" /usr/lib/systemd/system/openstack-nova-compute.service'
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true
+
+- name: Nova config
+  template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    mode: 0640
+  notify:
+    - Restart nova services
+
+- name: Config libvirtd
+  lineinfile:
+    dest: /etc/sysconfig/libvirtd
+    state: present
+    line: 'LIBVIRTD_ARGS="-l --config /etc/libvirt/libvirtd.conf"'
+  notify:
+    - Restart libvirtd
+
+- name: Config libvirtd.conf
+  lineinfile:
+    dest: /etc/libvirt/libvirtd.conf
+    state: present
+    line: "{{ item }}"
+  loop:
+    - listen_tls = 0
+    - listen_tcp = 1
+    - auth_tcp = "none"
+    - log_level = 3
+    - log_outputs = "3:file:/var/log/libvirt/libvirtd.log"
+  notify:
+    - Restart libvirtd
+
+- name: Be sure nova and libvirtd service is running and enabled
+  service:
+    name: libvirtd
+    state: started
+
+- name: Sync ceph relate keys
+  copy:
+    src: "{{ inventory_dir }}{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: cinder
+    group: cinder
+    mode: 0644
+  loop:
+    - { src: '/tmp/client.cinder.key',dest: '/etc/ceph/client.cinder.key' }
+    - { src: '/tmp/ceph.client.cinder.keyring', dest: '/etc/ceph/ceph.client.cinder.keyring' }
+  when: backend_openstack.nova.images_type == 'rbd'
+
+- name: Config /etc/ceph/ceph.conf
+  copy:
+    src: "{{ inventory_dir }}/tmp/ceph.conf"
+    dest: /etc/ceph/ceph.conf
+    owner: root
+    group: root
+    mode: 0644
+    force: false
+
+- name: Sync ceph relate secret file
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'secret.xml.j2',dest: '/etc/ceph/secret.xml' }
+  when: backend_openstack.nova.images_type == 'rbd'
+
+- name: Config ceph.conf
+  blockinfile:
+    path: /etc/ceph/ceph.conf
+    block: |
+      [client]
+      rbd cache = false
+      rbd cache writethrough until flush = false
+      cache size =  67108864
+      rbd cache max dirty = 0
+      rbd cache max dirty age = 0
+      admin socket = /var/run/ceph/guests/$cluster-$type.$id.$pid.$cctid.asok
+      log file = /var/log/qemu/qemu-guest-$pid.log
+      rbd concurrent management ops = 20
+  when: backend_openstack.nova.images_type == 'rbd'
+
+- name: Config ceph relate
+  shell: '{{ item }}'
+  loop:
+    - virsh secret-define --file /etc/ceph/secret.xml
+    - virsh secret-set-value --secret {{ secret_uuid }} --base64 $(cat /etc/ceph/client.cinder.key)
+  when: backend_openstack.nova.images_type == 'rbd'
+
+- name: Make sure qemu related directory is exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: qemu
+    group: qemu
+    recurse: true
+  loop:
+    - /var/run/ceph/guests/
+    - /var/log/qemu/
+  when: backend_openstack.nova.images_type == 'rbd'

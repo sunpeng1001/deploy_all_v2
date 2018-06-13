@@ -1,0 +1,37 @@
+global
+  chroot  /var/lib/haproxy
+  daemon
+  group  haproxy
+  log  127.0.0.1 local2 info
+  maxconn  40960
+  pidfile  /var/run/haproxy.pid
+  spread-checks  3
+  stats  socket /var/lib/haproxy/stats
+  user  haproxy
+
+defaults
+  log  global
+  option tcplog
+  maxconn  40960
+  mode  http
+  option  redispatch
+  option  http-server-close
+  option  dontlognull
+  balance source
+  retries  3
+  timeout  http-request 20s
+  timeout  queue 1m
+  timeout  connect 10s
+  timeout  client 1m
+  timeout  server 1m
+  timeout  check 10s
+
+listen haproxy_stats
+  mode http
+  bind {{ vip }}:{{ haproxy_web_port }}
+  option httplog
+  stats refresh 30s
+  stats uri /status
+  stats realm Haproxy Manager
+  stats auth {{ haproxy_stats_user }}:{{ haproxy_stats_pass }}
+####

@@ -1,0 +1,7 @@
+---
+- name: Restart haproxy
+  service:
+    name: haproxy
+    state: restarted
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['os_ha'] }}"

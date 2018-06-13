@@ -1,0 +1,4 @@
+---
+- hosts: all:!ceph_mon_host
+  roles:
+    - ntp

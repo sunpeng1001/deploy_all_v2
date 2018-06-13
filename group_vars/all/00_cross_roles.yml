@@ -1,0 +1,193 @@
+---
+
+memcached_servers: "{% for item in groups['memcached_server'] %}\
+                    {{ item }}:{{ memcached.port }}\
+                    {% if not loop.last %},{% endif %}\
+                    {% endfor %}"
+
+
+nova_rabbit_servers: "{% for item in groups['nova_rabbit'] %}\
+                      {{ item }}:{{ rabbitmq.port }}\
+                      {% if not loop.last %},{% endif %}\
+                      {% endfor %}"
+other_rabbit_servers: "{% for item in groups['other_rabbit'] %}\
+                       {{ item }}:{{ rabbitmq.port }}\
+                       {% if not loop.last %},{% endif %}\
+                       {% endfor %}"
+
+
+db_host: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+          {{ network_openstack.management.vip }}\
+          {% else %}\
+          {{ groups['mariadb'][0] }}\
+          {% endif %}"
+db_port: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+          {{ mariadb.port_ha }}\
+          {% else %}\
+          {{ mariadb.port }}\
+          {% endif %}"
+
+
+auth_admin_host: "{% if domain is defined and domain.keystone_admin is defined and domain.keystone_admin %}\
+                  {{ domain.keystone_admin }}\
+                  {% elif network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                  {{ network_openstack.management.vip }}\
+                  {% else %}\
+                  {{ groups['kgc_server'][0] }}\
+                  {% endif %}"
+auth_admin_port: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                  {{ openstack_keystone.port.admin_ha }}\
+                  {% else %}\
+                  {{ openstack_keystone.port.admin }}\
+                  {% endif %}"
+
+auth_public_host: "{% if domain is defined and domain.keystone_public is defined and domain.keystone_public %}\
+                   {{ domain.keystone_public }}\
+                   {% elif network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                   {{ network_openstack.management.vip }}\
+                   {% else %}\
+                   {{ groups['kgc_server'][0] }}\
+                   {% endif %}"
+auth_public_port: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                   {{ openstack_keystone.port.public_ha }}\
+                   {% else %}\
+                   {{ openstack_keystone.port.public }}\
+                   {% endif %}"
+
+glance_api_host: "{% if domain is defined and domain.glance_api is defined and domain.glance_api %}\
+                  {{ domain.glance_api }}\
+                  {% elif network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                  {{ network_openstack.management.vip }}\
+                  {% else %}\
+                  {{ groups['kgc_server'][0] }}\
+                  {% endif %}"
+glance_api_port: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                  {{ openstack_glance.port.api_ha }}\
+                  {% else %}\
+                  {{ openstack_glance.port.api }}\
+                  {% endif %}"
+
+nova_api_host: "{% if domain is defined and domain.nova_api is defined and domain.nova_api %}\
+                {{ domain.nova_api }}\
+                {% elif network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                {{ network_openstack.management.vip }}\
+                {% else %}
+                {{ groups['nova_server'][0] }}
+                {% endif %}"
+nova_api_port: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                {{ openstack_nova.port.api_ha }}\
+                {% else %}\
+                {{ openstack_nova.port.api }}\
+                {% endif %}"
+
+nova_api_metadata_host: "{% if domain is defined and domain.nova_api_metadata is defined and domain.nova_api_metadata %}\
+                         {{ domain.nova_api_metadata }}\
+                         {% elif network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                         {{ network_openstack.management.vip }}\
+                         {% else %}
+                         {{ groups['nova_server'][0] }}
+                         {% endif %}"
+nova_api_port: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                {{ openstack_nova.port.api_metadata_ha }}\
+                {% else %}\
+                {{ openstack_nova.port.api_metadata }}\
+                {% endif %}"
+
+nova_placement_api_host: "{% if domain is defined and domain.nova_placement_api is defined and domain.nova_placement_api %}\
+                          {{ domain.nova_placement_api }}\
+                          {% elif network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                          {{ network_openstack.management.vip }}\
+                          {% else %}
+                          {{ groups['nova_server'][0] }}
+                          {% endif %}"
+nova_placement_api_port: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                          {{ openstack_placement.port_ha }}\
+                          {% else %}\
+                          {{ openstack_placement.port }}\
+                          {% endif %}"
+
+nova_novncproxy_host: "{% if domain is defined and domain.nova_novncproxy is defined and domain.nova_novncproxy %}\
+                       {{ domain.nova_novncproxy }}\
+                       {% elif network_openstack.management.proxy_vip is defined and network_openstack.management.proxy_vip %}\
+                       {{ network_openstack.management.proxy_vip }}\
+                       {% else %}\
+                       {{ groups['proxy'][0] }}\
+                       {% endif %}"
+nova_novncproxy_port: "{% if network_openstack.management.proxy_vip is defined and network_openstack.management.proxy_vip %}\
+                       {{ openstack_nova.port.novncproxy_ha }}\
+                       {% else %}\
+                       {{ openstack_nova.port.novncproxy }}\
+                       {% endif %}"
+
+nova_serialproxy_host: "{% if domain is defined and domain.nova_serialproxy is defined and domain.nova_serialproxy %}\
+                        {{ domain.nova_serialproxy }}\
+                        {% elif network_openstack.management.proxy_vip is defined and network_openstack.management.proxy_vip %}\
+                        {{ network_openstack.management.proxy_vip }}\
+                        {% else %}\
+                        {{ groups['proxy'][0] }}\
+                        {% endif %}"
+nova_serialproxy_port: "{% if network_openstack.management.proxy_vip is defined and network_openstack.management.proxy_vip %}\
+                        {{ openstack_nova.port.serialproxy_ha }}\
+                        {% else %}\
+                        {{ openstack_nova.port.serialproxy }}\
+                        {% endif %}"
+
+neutron_server_host: "{% if domain is defined and domain.neutron_server is defined and domain.neutron_server %}\
+                      {{ domain.neutron_server }}\
+                      {% elif network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                      {{ network_openstack.management.vip }}\
+                      {% else %}\
+                      {{ groups['neutron_server'][0] }}\
+                      {% endif %}"
+neutron_server_port: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                      {{ openstack_neutron.port_ha }}\
+                      {% else %}\
+                      {{ openstack_neutron.port }}\
+                      {% endif %}"
+
+cinder_api_host: "{% if domain is defined and domain.cinder_api is defined and domain.cinder_api %}\
+                  {{ domain.cinder_api }}\
+                  {% elif network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                  {{ network_openstack.management.vip }}\
+                  {% else %}\
+                  {{ groups['kgc_server'][0] }}\
+                  {% endif %}"
+cinder_api_port: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                  {{ openstack_cinder.port.api_ha }}\
+                  {% else %}\
+                  {{ openstack_cinder.port }}\
+                  {% endif %}"
+
+
+ironic_api_host: "{% if domain is defined and domain.ironic_api is defined and domain.ironic_api %}\
+                  {{ domain.ironic_api }}\
+                  {% elif network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                  {{ network_openstack.management.vip }}\
+                  {% else %}\
+                  {{ groups['ironic'][0] }}
+                  {% endif %}"
+ironic_api_port: "{% if network_openstack.management.vip is defined and network_openstack.management.vip %}\
+                  {{ openstack_ironic.port.api_ha }}\
+                  {% else %}\
+                  {{ openstack_ironic.port.api }}\
+                  {% endif %}"
+
+ironic_api_provision_host: "{% if domain is defined and domain.ironic_api_provision is defined and domain.ironic_api_provision %}\
+                            {{ domain.ironic_api_provision }}\
+                            {% elif network_openstack_baremetal.provision.vip is defined and network_openstack_baremetal.provision.vip %}\
+                            {{ network_openstack_baremetal.provision.vip }}\
+                            {% else %}\
+                            {{ groups['proxy'][0] }}\
+                            {% endif %}"
+ironic_api_provision_port: "{% if network_openstack_baremetal.provision.vip is defined and network_openstack_baremetal.provision.vip %}\
+                            {{ openstack_ironic.port.api_provision_ha }}\
+                            {% else %}\
+                            {{ openstack_ironic.port.api }}\
+                            {% endif %}"
+
+ironic_inspector_api_host: "{% if domain is defined and domain.ironic_inspector_api is defined and domain.ironic_inspector_api %}\
+                            {{ domain.ironic_inspector_api }}\
+                            {% else %}\
+                            {{ groups['ironic_inspector'][0] }}\
+                            {% endif %}"
+ironic_inspector_api_port: "{{ openstack_ironic_inspector.port.api }}"

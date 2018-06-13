@@ -1,0 +1,12 @@
+---
+# roles/system_init/tasks/history_config.yml
+
+- name: Clean bash history
+  shell: history -c
+
+- name: History config
+  lineinfile:
+    dest: /etc/profile
+    state: present
+    line: 'export HISTSIZE=0'
+  notify: Source profile

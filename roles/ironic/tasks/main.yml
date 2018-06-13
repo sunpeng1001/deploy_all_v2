@@ -1,0 +1,95 @@
+---
+# roles/ironic/tasks/main.yml
+
+- include_tasks: ha.yml
+  loop: "{{ groups['os_ha'] }}"
+  loop_control:
+    loop_var: outer_item
+  run_once: true
+  when:
+    - network_openstack.management.vip is defined
+    - network_openstack.management.vip
+  tags:
+    - ironic_ha
+
+- include_tasks: ha_nova_serialproxy.yml
+  loop: "{{ groups['proxy_ha'] }}"
+  loop_control:
+    loop_var: outer_item
+  run_once: true
+  when:
+    - network_openstack.management.proxy_vip is defined
+    - network_openstack.management.proxy_vip
+  tags:
+    - ironic_ha_nova_serialproxy
+
+- import_tasks: iptables.yml
+  tags:
+    ironic_iptables
+
+- import_tasks: install.yml
+  tags:
+    - ironic_install
+
+- import_tasks: db.yml
+  run_once: true
+  tags:
+    - ironic_db
+
+- import_tasks: auth.yml
+  run_once: true
+  tags:
+    - ironic_auth
+
+- import_tasks: config_ipxe.yml
+  tags:
+    - ironic_config_ipxe
+
+- import_tasks: config_nova.yml
+  tags:
+    - ironic_config_nova
+
+- import_tasks: config_httpd.yml
+  tags:
+    - ironic_config_httpd
+
+- include_tasks: config_neutron_compute.yml
+  loop: "{{ groups['compute'] }}"
+  loop_control:
+    loop_var: outer_item
+  run_once: true
+  tags:
+    - ironic_config_neutron_compute
+
+- include_tasks: config_neutron_server.yml
+  loop: "{{ groups['neutron_server'] }}"
+  loop_control:
+    loop_var: outer_item
+  run_once: true
+  tags:
+    - ironic_config_neutron_server
+
+- import_tasks: config.yml
+  tags:
+    - ironic_config
+
+- import_tasks: db_sync.yml
+  run_once: true
+  tags:
+    - ironic_db_sync
+
+- import_tasks: start_xinetd.yml
+  tags:
+    - ironic_start_xinetd
+
+- import_tasks: start_nova.yml
+  tags:
+    - ironic_start_nova
+
+- import_tasks: start_httpd.yml
+  tags:
+    - ironic_start_httpd
+
+- import_tasks: start.yml
+  tags:
+    - ironic_start

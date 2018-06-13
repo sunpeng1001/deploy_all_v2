@@ -1,0 +1,20 @@
+---
+- import_tasks: iptables.yml
+  tags:
+    - nova_compute_iptables
+
+- import_tasks: pre_install.yml
+  tags:
+    nova_compute_pre_install
+
+- import_tasks: install.yml
+  tags:
+    - nova_compute_install
+
+- import_tasks: config.yml
+  tags:
+    - nova_compute_config
+
+- import_tasks: start.yml
+  tags:
+    - nova_compute_start

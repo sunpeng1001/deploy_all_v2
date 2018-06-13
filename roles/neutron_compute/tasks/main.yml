@@ -1,0 +1,9 @@
+---
+- import_tasks: install.yml
+  tags: neutron_compute_install
+
+- import_tasks: config.yml
+  tags: neutron_compute_config
+
+- import_tasks: start.yml
+  tags: neutron_compute_start

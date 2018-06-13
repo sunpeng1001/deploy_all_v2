@@ -1,0 +1,6 @@
+---
+- hosts: all:!ceph_mon_host
+  tasks:
+    - name: Init system
+      import_role:
+        name: system_init

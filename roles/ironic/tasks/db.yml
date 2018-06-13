@@ -1,0 +1,58 @@
+---
+# roles/ironic/tasks/db.yml
+
+- name: Create DB for service ironic
+  mysql_db:
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ mariadb.admin.user }}"
+    login_password: "{{ mariadb.admin.password }}"
+    config_file: /etc/my.cnf
+    name: "{{ openstack_ironic.db.database }}"
+    encoding: "utf8"
+    state: present
+
+- name: Grant access to the DB for service ironic
+  mysql_user:
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ mariadb.admin.user }}"
+    login_password: "{{ mariadb.admin.password }}"
+    config_file: /etc/my.cnf
+    name: "{{ openstack_ironic.db.user }}"
+    password: "{{ openstack_ironic.db.password }}"
+    host: "{{ item }}"
+    priv: "{{ openstack_ironic.db.database }}.*:ALL"
+    append_privs: true
+    state: present
+  loop:
+    - "localhost"
+    - "%"
+
+- name: Create DB for tooz
+  mysql_db:
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ mariadb.admin.user }}"
+    login_password: "{{ mariadb.admin.password }}"
+    config_file: /etc/my.cnf
+    name: "tooz"
+    encoding: "utf8"
+    state: present
+
+- name: Grant access to the DB for tooz
+  mysql_user:
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ mariadb.admin.user }}"
+    login_password: "{{ mariadb.admin.password }}"
+    config_file: /etc/my.cnf
+    name: "tooz"
+    password: "TOOZ_DBPASS"
+    host: "{{ item }}"
+    priv: "tooz.*:ALL"
+    append_privs: true
+    state: present
+  loop:
+    - "localhost"
+    - "%"

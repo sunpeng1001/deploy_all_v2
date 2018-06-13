@@ -1,0 +1,58 @@
+---
+- name: Config ironic iptables for management network
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ item }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ openstack_ironic_inspector.port.api }}'
+  loop:
+    - '{{ network_openstack.management.cidr }}'
+    - '{{ network_openstack_baremetal.inspector.cidr }}'
+
+- name: Config ironic iptables tftp udp rules for provision network
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack_baremetal.inspector.cidr }}'
+    protocol: udp
+    match: multiport
+    destination_port: '{{ port_udp_tftp }}'
+
+- name: Config ironic iptables dnsmasq udp rules for provision network
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source_port: '{{ port_udp_dnsmasq_src_range }}'
+    protocol: udp
+    match: udp
+    destination_port: '{{ port_udp_dnsmasq_dest_range }}'
+
+- name: Insert tcp iptables rules to /etc/sysconfig/iptables for OpenStack Ironic Inspector
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for OpenStack Ironic Inspector {mark} #"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_ironic_inspector.port.api }} -j ACCEPT
+      -A INPUT -s {{ network_openstack_baremetal.inspector.cidr }} -p tcp -m multiport --dport {{ openstack_ironic_inspector.port.api }} -j ACCEPT
+
+- name: Insert udp iptables rules to /etc/sysconfig/iptables for dnsmasq
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for dnsmasq {mark} #"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -p udp -m udp --sport {{ port_udp_dnsmasq_src_range }} --dport {{ port_udp_dnsmasq_dest_range }} -j ACCEPT
+
+- name: Insert udp iptables rules to /etc/sysconfig/iptables for tftp
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for tftp {mark} #"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack_baremetal.inspector.cidr }} -p udp -m multiport --dport {{ port_udp_tftp }} -j ACCEPT

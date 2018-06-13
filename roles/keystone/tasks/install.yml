@@ -1,0 +1,29 @@
+---
+# roles/keystone/tasks/install.yml
+
+- name: Install base packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python-openstackclient
+    - openstack-selinux
+    - MySQL-python
+    - python-shade
+
+- name: Install keystone and dependence packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openstack-keystone
+    - httpd
+    - mod_wsgi
+
+- name: Install rsync packages
+  yum:
+    name: rsync
+    state: present
+  when:
+    - ansible_play_batch|length > 1
+    - inventory_hostname == keystone_master

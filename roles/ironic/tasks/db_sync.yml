@@ -1,0 +1,5 @@
+---
+# roles/ironic/tasks/db_sync.yml
+
+- name: Populate the Baremetal service database
+  shell: ironic-dbsync --config-file /etc/ironic/ironic.conf create_schema

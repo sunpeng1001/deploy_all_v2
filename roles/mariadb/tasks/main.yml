@@ -1,0 +1,27 @@
+---
+- include_tasks: ha.yml
+  loop: "{{ groups['os_ha'] }}"
+  loop_control:
+    loop_var: outer_item
+  tags: mariadb_ha
+
+- include_tasks: iptables.yml
+  tags: mariadb_iptables
+
+- include_tasks: data_init.yml
+  tags: mariadb_datainit
+
+- include_tasks: hostname.yml
+  tags: mariadb_hostname
+
+- include_tasks: install.yml
+  tags: mariadb_install
+
+- include_tasks: config.yml
+  tags: mariadb_config
+
+- include_tasks: cluster_init.yml
+  tags: mariadb_cluster_init
+
+- include_tasks: cluster_monitor.yml
+  tags: mariadb_cluster_monitor

@@ -1,0 +1,60 @@
+---
+# roles/ironic/handlers/main.yml
+
+- name: Restart haproxy
+  service:
+    name: haproxy
+    state: restarted
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['os_ha'] }}"
+
+- name: Restart keepalived
+  service:
+    name: keepalived
+    state: restarted
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['os_ha'] }}"
+
+- name: Restart haproxy on proxy_ha
+  service:
+    name: haproxy
+    state: restarted
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['proxy_ha'] }}"
+
+- name: Restart neutron-server
+  service:
+    name: neutron-server
+    state: restarted
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['neutron_server'] }}"
+
+- name: Restart xinetd
+  service:
+    name: xinetd
+    state: restarted
+
+- name: Restart httpd
+  service:
+    name: httpd
+    state: restarted
+
+- name: Restart nova
+  service:
+    name: openstack-nova-compute
+    state: restarted
+
+- name: Restart ironic services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+    - openstack-ironic-api
+    - openstack-ironic-conductor
+
+- name: Restart neutron-openvswitch-agent.service
+  service:
+    name: neutron-openvswitch-agent
+    state: restarted
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['compute'] }}"

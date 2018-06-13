@@ -1,0 +1,26 @@
+#!/bin/bash
+#:***********************************************
+#:Program: disk uuid mount Initialize the script
+#:
+#:Author: liyajin
+#:
+#:History: 2017-08-09
+#:
+#:Version: 1.0
+#:***********************************************
+NUMA_COUNT=$(grep "numa=off" /etc/grub2.cfg |wc -l)
+if [ $NUMA_COUNT -eq 0 ];then
+   sed -i "s#LANG=en_US.UTF-8#LANG=en_US.UTF-8 numa=off#g" /etc/grub2.cfg
+fi
+
+DISK_UUID=$(blkid |grep "{{ disk_name }}"|awk -F "\"" '{print $2}'|xargs)
+DISK_UUID_COUNT=$(cat /etc/fstab|grep "$DISK_UUID"|wc -l)
+if [ $DISK_UUID_COUNT -ne 1 ];then
+    sed -i '$a\UUID='$DISK_UUID' {{ disk_path }}                   {{ disk_type }}     {{ disk_vars }}        0 0' /etc/fstab
+fi
+
+#DISK_UUID_COUNT=$(cat /etc/fstab|grep "{{ disk_name }}"|wc -l)
+#if [ $DISK_UUID_COUNT -ne 1 ];then
+#    sed -i '$a\{{ disk_name }} {{ disk_path }}                   {{ disk_type }}     {{ disk_vars }}        0 0' /etc/fstab
+#fi
+#

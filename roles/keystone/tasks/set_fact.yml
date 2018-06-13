@@ -1,0 +1,16 @@
+---
+# roles/keystone/tasks/set_fact.yml
+
+- name: Set fact when management vip is not found
+  set_fact:
+    keystone_db_host: "{{ groups.mariadb[0] }}"
+    keystone_db_port: "{{ mariadb.port }}"
+  when: (network_openstack.management.vip is not defined) or (not network_openstack.management.vip)
+
+- name: Set fact when management vip is defined
+  set_fact:
+    keystone_db_host: "{{ network_openstack.management.vip }}"
+    keystone_db_port: "{{ mariadb.port_ha }}"
+  when:
+    - network_openstack.management.vip is defined
+    - network_openstack.management.vip

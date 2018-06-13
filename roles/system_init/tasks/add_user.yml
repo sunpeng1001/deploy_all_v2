@@ -1,0 +1,21 @@
+---
+# roles/system_init/tasks/add_user.yml
+
+- name: Add users
+  user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    groups: wheel
+    password: "{{ item.password }}"
+  loop:
+    - { name: 'syspub',uid: 1200,password: '$6$Vcb330YJ$sMlGuroKDMIBKdhdIIKM8v.FwPdI1DplEYCW6IFs3f/bpDbuAfRB.6bJuwAvC3u6D064NjwuldQhDl8oC9q9M.' }
+
+- name: Sudoer config
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    line: "{{ item }}"
+    validate: "visudo -cf %s"
+  loop:
+    - 'User_Alias SYSADMINS = syspub'
+    - 'SYSADMINS       ALL=(ALL)       NOPASSWD: ALL'

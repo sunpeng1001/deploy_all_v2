@@ -1,0 +1,26 @@
+---
+#rabbitmq user and pass
+rabbitmq_user: "{{ rabbitmq.user }}"
+rabbitmq_pass: "{{ rabbitmq.password }}"
+
+#rabbitmq log path
+rabbitmq_log_path: /var/log/rabbitmq
+
+#rabbitmq related ports
+rabbitmq_port: "{{ rabbitmq.port }}"
+rabbitmq_dist_port: 18892
+rabbitmq_epmd_port: 18891
+rabbitmq_mgr_port: 18890
+
+#rabbitmq iptables ports
+iptables_rabbitmq_cluster_port:
+  - '{{ rabbitmq_port }}'
+  - '{{ rabbitmq_dist_port }}'
+  - '{{ rabbitmq_epmd_port }}'
+  - '{{ rabbitmq_mgr_port }}'
+
+iptables_rabbitmq_onenode_port:
+  - '{{ rabbitmq_port }}'
+  - '{{ rabbitmq_mgr_port }}'
+
+master: "{{ ansible_play_batch | min }}"

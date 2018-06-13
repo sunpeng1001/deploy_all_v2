@@ -1,0 +1,10 @@
+---
+- name: Config memcached
+  template:
+    src: memcached.j2
+    dest: /etc/sysconfig/memcached
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - Restart memcached

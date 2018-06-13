@@ -1,0 +1,25 @@
+---
+- import_tasks: "{{ playbook_dir }}/common-tasks/create_service_credentials_and_endpoints.yml"
+  vars:
+    user_name: "{{ openstack_nova.auth.user }}"
+    user_password: "{{ openstack_nova.auth.password }}"
+    service_type: "compute"
+    service_description: "OpenStack Compute"
+    service_host: "{{ nova_api_host }}"
+    service_port: "{{ nova_api_port }}"
+    service_api_version: "/v2.1"
+  run_once: true
+  tags:
+    - nova_controller_auth
+
+- import_tasks: "{{ playbook_dir }}/common-tasks/create_service_credentials_and_endpoints.yml"
+  vars:
+    user_name: "{{ openstack_placement.auth.user }}"
+    user_password: "{{ openstack_placement.auth.password }}"
+    service_type: "placement"
+    service_description: "Placement API"
+    service_host: "{{ nova_placement_api_host }}"
+    service_port: "{{ nova_placement_api_port }}"
+  run_once: true
+  tags:
+    - nova_controller_auth

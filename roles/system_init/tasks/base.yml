@@ -1,0 +1,22 @@
+---
+# roles/system_init/tasks/base.yml
+
+- name: Pass length and count limit
+  lineinfile:
+    dest: "{{ item.dest }}"
+    regexp: "{{ item.regexp }}"
+    insertafter: "{{ item.insertafter }}"
+    line: "{{ item.line }}"
+  loop:
+    - { dest: '/etc/login.defs',regexp: '^PASS_MIN_LEN',insertafter: '^PASS_MIN_DAYS',line: 'PASS_MIN_LEN    8' }
+    - { dest: '/etc/pam.d/system-auth',regexp: '/lib64/security/pam_tally2.so',insertafter: 'pam_env.so',line: 'auth        required      /lib64/security/pam_tally2.so deny=3 unlock_time=300' }
+
+- name: Disable and stop system service
+  service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop:
+    - 'NetworkManager'
+    - 'firewalld'
+    - 'postfix'

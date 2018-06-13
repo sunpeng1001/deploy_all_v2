@@ -1,0 +1,34 @@
+---
+mysql_cnf: '/etc/my.cnf'
+sst_transfer_port: '4444'
+group_communication_port: '4567'
+ist_transfer_port: '4568'
+wsrep_provider: '/usr/lib64/galera/libgalera_smm.so'
+
+innodb_log_file_size: 4G
+
+iptables_galera_management_port:
+  - '{{ mariadb.port }}'
+
+iptables_galera_internal_port:
+  - '{{ mariadb.port }}'
+  - '{{ mariadb.port_cluster_check }}'
+  - '{{ sst_transfer_port }}'
+  - '{{ group_communication_port }}'
+  - '{{ ist_transfer_port }}'
+
+mysql_root_pass: 'rZDl9AoJQJ6k23DfUEc1l'
+bkpuser_pass: 'Yddtt49zy2fpxgECdhVlc'
+admin_pass: 'RWkemqzZB4wsozy10Gw'
+mysql_sst_dbpass: '452e8209afd0be63d86'
+clustercheckuser_pass: 'XuLW6HauzyjoQzxHgzGdQ'
+repl_pass: 'ymKtUL0kaGkF5yxKuLz6v'
+
+mariadb_object_name: 'openstack'
+mariadb_data_path: '{{ work_path }}/galera/{{ mariadb_object_name }}_{{ mariadb.port }}/data'
+mariadb_tmp_path: '{{ work_path }}/galera/{{ mariadb_object_name }}_{{ mariadb.port }}/tmp'
+bin_log_path: '{{ work_path }}/galera/{{ mariadb_object_name }}_{{ mariadb.port }}/binlog'
+redo_log_path: '{{ work_path }}/galera/{{ mariadb_object_name }}_{{ mariadb.port }}/redolog'
+undo_log_path: '{{ work_path }}/galera/{{ mariadb_object_name }}_{{ mariadb.port }}/undolog'
+
+mysql_allow_ip_net: "{{ network_openstack.management.cidr|ipaddr('network') }}/{{ network_openstack.management.cidr|ipaddr('netmask') }}"

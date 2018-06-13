@@ -1,0 +1,27 @@
+---
+- name: Populate the nova-api database
+  shell: /bin/sh -c "nova-manage api_db sync"
+  become: true
+  become_user: nova
+
+- name: Register the cell0 database
+  shell: /bin/sh -c "nova-manage cell_v2 map_cell0"
+  become: true
+  become_user: nova
+
+- name: Check cell cell1 is eixst
+  shell: nova-manage cell_v2 list_cells 2>/dev/null | grep cell1
+  register: cell1_res
+  changed_when: false
+  failed_when: cell1_res.rc >= 2
+
+- name: Create the cell1 cell if cell1 not exist
+  shell: /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose"
+  become: true
+  become_user: nova
+  when: "'cell1' not in cell1_res.stdout"
+
+- name: Populate the nova database
+  shell: /bin/sh -c "nova-manage db sync"
+  become: true
+  become_user: nova

@@ -1,0 +1,49 @@
+---
+- name: Config mariadb management iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack.management.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ item }}'
+  with_list:
+    "{{ iptables_galera_management_port }}"
+  tags: mariadb_iptables
+
+- name: Config galera_internal iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_mariadb.internal.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ item }}'
+  with_list:
+    "{{ iptables_galera_internal_port }}"
+  tags: mariadb_iptables
+
+- name: Insert tcp rule to /etc/sysconfig/iptables mariadb management
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for mariadb {mark}"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ mariadb.port }} -j ACCEPT
+  tags: mariadb_iptables
+
+- name: Insert tcp rule to /etc/sysconfig/iptables galera_internal
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for mariadb {mark}"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ mariadb.port }} -j ACCEPT
+      -A INPUT -s {{ network_mariadb.internal.cidr }} -p tcp -m multiport --dport {{ mariadb.port }} -j ACCEPT
+      -A INPUT -s {{ network_mariadb.internal.cidr }} -p tcp -m multiport --dport {{ sst_transfer_port }} -j ACCEPT
+      -A INPUT -s {{ network_mariadb.internal.cidr }} -p tcp -m multiport --dport {{ group_communication_port }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ mariadb.port_cluster_check }} -j ACCEPT
+      -A INPUT -s {{ network_mariadb.internal.cidr }} -p tcp -m multiport --dport {{ ist_transfer_port }} -j ACCEPT
+  tags: mariadb_iptables

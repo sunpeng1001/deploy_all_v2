@@ -1,0 +1,65 @@
+---
+# roles/keystone/tasks/main.yml
+
+- import_tasks: set_fact.yml
+  run_once: true
+  tags:
+    keystone_set_fact
+
+- include_tasks: ha.yml
+  loop: "{{ groups['os_ha'] }}"
+  loop_control:
+    loop_var: outer_item
+  run_once: true
+  when:
+    - network_openstack.management.vip is defined
+    - network_openstack.management.vip
+  tags:
+    - keystone_ha
+
+- import_tasks: iptables.yml
+  tags:
+    - keystone_iptables
+
+- import_tasks: pre_install.yml
+  tags:
+    - keystone_pre_install
+
+- import_tasks: install.yml
+  tags:
+    - keystone_install
+
+- import_tasks: db.yml
+  run_once: true
+  tags:
+    - keystone_db
+
+- import_tasks: config.yml
+  tags:
+    - keystone_config
+
+- import_tasks: db_sync.yml
+  run_once: true
+  tags:
+    - keystone_db_sync
+
+- import_tasks: init_fernet.yml
+  tags:
+    - keystone_init_fernet
+
+- import_tasks: httpd.yml
+  tags:
+    - keystone_httpd
+
+- import_tasks: config_single.yml
+  when: ansible_play_batch|length == 1
+  tags:
+    - keystone_config_single
+
+- import_tasks: config_cluster.yml
+  when:
+    - ansible_play_batch|length > 1
+    - network_openstack.management.vip is defined
+    - network_openstack.management.vip
+  tags:
+    - keystone_config_cluster

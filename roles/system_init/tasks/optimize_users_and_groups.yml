@@ -1,0 +1,20 @@
+---
+# roles/system_init/tasks/optimize_users_and_groups.yml
+
+- name: Del user
+  user:
+    name: "{{ item }}"
+    state: absent
+    remove: true
+  loop:
+    - adm
+    - lp
+    - shutdown
+    - halt
+  ignore_errors: true
+
+- name: Del group
+  group:
+    name: dip
+    state: absent
+  ignore_errors: true

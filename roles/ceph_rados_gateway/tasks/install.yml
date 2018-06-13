@@ -1,0 +1,7 @@
+---
+# roles/ceph_rados_gateway/tasks/install.yml
+
+- name: Rgw packages install
+  yum:
+    name: ceph-radosgw
+    state: present

@@ -1,0 +1,24 @@
+---
+# roles/keystone/tasks/iptables.yml
+
+- name: Config keystone iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: "{{ network_openstack.management.cidr }}"
+    protocol: tcp
+    match: multiport
+    destination_port: "{{ item }}"
+  loop:
+    - "{{ openstack_keystone.port.admin }}"
+    - "{{ openstack_keystone.port.public }}"
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for keystone admin and public port {mark}"
+    insertafter: "^:OUTPUT ACCEPT "
+    block: |
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_keystone.port.admin }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_keystone.port.public }} -j ACCEPT

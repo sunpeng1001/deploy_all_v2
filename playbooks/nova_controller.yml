@@ -1,0 +1,4 @@
+---
+- hosts: nova_server
+  roles:
+    - nova_controller

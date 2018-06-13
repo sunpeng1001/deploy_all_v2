@@ -1,0 +1,7 @@
+default introspect
+
+label introspect
+kernel coreos_production_pxe.vmlinuz
+append initrd=coreos_production_pxe_image-oem.cpio.gz ipa-inspection-callback-url=http://{{ hostvars[inventory_hostname]['ansible_' + network_openstack_baremetal.inspector.interface]['ipv4']['address'] }}:{{ ironic_inspector_api_port }}/v1/continue ipa-inspection-collectors=default ipa-debug=1 ipa-collect-lldp=1 systemd.journald.forward_to_console=no sshkey="{{ pub_key_res.stdout }}"
+
+ipappend 3

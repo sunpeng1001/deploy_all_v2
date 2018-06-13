@@ -1,0 +1,4 @@
+---
+- hosts: ceph_rados_gateway
+  roles:
+    - ceph_rados_gateway

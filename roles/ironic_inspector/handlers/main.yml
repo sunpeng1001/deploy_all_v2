@@ -1,0 +1,15 @@
+---
+- name: Restart xinetd
+  service:
+    name: xinetd
+    state: restarted
+
+- name: Restart openstack-ironic-inspector-dnsmasq
+  service:
+    name: openstack-ironic-inspector-dnsmasq
+    state: restarted
+
+- name: Restart openstack-ironic-inspector
+  service:
+    name: openstack-ironic-inspector
+    state: restarted

@@ -1,0 +1,12 @@
+---
+# roles/ironic/tasks/config_httpd.yml
+
+- name: Config httpd
+  copy:
+    src: httpd.conf
+    dest: /etc/httpd/conf/httpd.conf
+    mode: 0644
+    owner: root
+    group: root
+  notify:
+    - Restart httpd

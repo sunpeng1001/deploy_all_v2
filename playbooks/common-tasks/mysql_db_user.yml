@@ -1,0 +1,29 @@
+---
+- name: Create DB for service
+  mysql_db:
+    login_user: "{{ mariadb.admin.user }}"
+    login_password: "{{ mariadb.admin.password }}"
+    login_host: "{{ mysql_login_host }}"
+    login_port: "{{ mysql_login_port }}"
+    config_file: /etc/my.cnf
+    name: "{{ mysql_db_name }}"
+    state: "present"
+  tags:
+    - common-mysql
+
+- name: Grant access to the DB for the service
+  mysql_user:
+    login_user: "{{ mariadb.admin.user }}"
+    login_password: "{{ mariadb.admin.password }}"
+    login_host: "{{ mysql_login_host }}"
+    login_port: "{{ mysql_login_port }}"
+    config_file: /etc/my.cnf
+    name: "{{ mysql_user_name }}"
+    password: "{{ mysql_user_password }}"
+    host: "{{ item }}"
+    state: "present"
+    priv: "{{ mysql_db_name }}.*:ALL"
+    append_privs: true
+  loop: "{{ grant_list | default(['localhost', '%']) }}"
+  tags:
+    - common-mysql

@@ -1,0 +1,4 @@
+---
+- hosts: ironic_inspector
+  roles:
+    - ironic_inspector

@@ -1,0 +1,71 @@
+[DEFAULT]
+workers = 8
+show_multiple_locations = True
+enable_v1_api = False
+enable_v2_api=True
+bind_host = 0.0.0.0
+bind_port = {{ openstack_glance.port.api }}
+image_quota = 30
+verbose = true
+debug = true
+log_file = {{ glance_log_path }}/api.log
+
+[database]
+connection = mysql+pymysql://glance:{{ openstack_glance.db.password }}@{{ db_host }}:{{ db_port }}/glance
+min_pool_size = 1
+max_pool_size = 10
+max_overflow = 50
+connection_recycle_time = 1800
+
+[keystone_authtoken]
+auth_uri = http://{{ auth_public_host }}:{{ auth_public_port }}
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}
+memcached_servers = {{ memcached_servers }}
+
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = glance
+password = {{ openstack_glance.auth.password }}
+
+[paste_deploy]
+flavor = keystone
+
+[glance_store]
+{% if 'rbd' in backend_openstack.glance.stores and 'swift' in backend_openstack.glance.stores %}
+default_store = rbd
+stores = {% for item in backend_openstack.glance.stores %}{{ item }}{% if not loop.last %},{% endif %}{% endfor %}
+
+rbd_store_pool = images
+rbd_store_user = glance
+rbd_store_ceph_conf = /etc/ceph/ceph.conf
+rbd_store_chunk_size = 4
+
+swift_store_auth_version = 1
+swift_store_auth_address = http://{{ hostvars[groups.ceph_rados_gateway.0]['ansible_' + rgw_storage_interface]['ipv4']['address'] }}:{{ ceph_rados_gateway.port }}/auth/1.0
+swift_store_user = GLANCE_USERNAME:swift
+swift_store_key = STORE_KEY
+swift_store_container = glance
+swift_store_create_container_on_put = True
+{% elif 'rbd' in backend_openstack.glance.stores %}
+default_store = rbd
+stores = {% for item in backend_openstack.glance.stores %}{{ item }}{% if not loop.last %},{% endif %}{% endfor %}
+
+rbd_store_pool = images
+rbd_store_user = glance
+rbd_store_ceph_conf = /etc/ceph/ceph.conf
+rbd_store_chunk_size = 4
+{% elif 'swift' in backend_openstack.glance.stores %}
+stores = {% for item in backend_openstack.glance.stores %}{{ item }}{% if not loop.last %},{% endif %}{% endfor %}
+
+swift_store_auth_version = 1
+swift_store_auth_address = http://{{ hostvars[groups.ceph_rados_gateway.0]['ansible_' + rgw_storage_interface]['ipv4']['address'] }}:{{ ceph_rados_gateway.port }}/auth/1.0
+swift_store_user = GLANCE_USERNAME:swift
+swift_store_key = STORE_KEY
+swift_store_container = glance
+swift_store_create_container_on_put = True
+{% else %}
+default_store = file
+stores = file,http
+{% endif %}

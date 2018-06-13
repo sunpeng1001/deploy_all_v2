@@ -1,0 +1,10 @@
+---
+# group_vars/proxy_ha
+
+nic: "{{ network_openstack.management.interface }}"
+vip: "{{ network_openstack.management.proxy_vip }}"
+netmask: "{{ network_openstack.management.cidr | ipaddr('prefix') }}"
+master: "{{  ansible_play_batch | min }}"
+slave: "{{  ansible_play_batch | max }}"
+
+vid: 85

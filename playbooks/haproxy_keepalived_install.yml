@@ -1,0 +1,3 @@
+---
+- import_playbook: haproxy_keepalived_os_install.yml
+- import_playbook: haproxy_keepalived_proxy_install.yml

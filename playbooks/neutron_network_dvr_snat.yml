@@ -1,0 +1,18 @@
+---
+- hosts: network
+  roles:
+    - neutron_compute
+  tasks:
+    - name: Modify /etc/neutron/l3_agent.ini
+      ini_file:
+        path: /etc/neutron/l3_agent.ini
+        section: DEFAULT
+        option: agent_mode
+        value: dvr_snat
+      notify:
+        - Restart neutron-l3-agent
+  handlers:
+    - name: Restart neutron-l3-agent
+      service:
+        name: neutron-l3-agent
+        satte: restarted

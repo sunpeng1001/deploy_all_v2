@@ -1,0 +1,156 @@
+---
+- name: Install the  packages
+  yum:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - MySQL-python
+    - gcc
+    - gcc-c++
+    - perl-DBD-MySQL
+    - socat
+    - libev
+    - openssl
+    - openssl-devel
+    - perl-IO-Socket-SSL
+    - openssl098e
+    - libaio
+    - boost-program-options
+    - perl-Compress-Raw-Bzip2
+    - perl-Compress-Raw-Zlib
+    - perl-DBI
+    - perl-Data-Dumper
+    - perl-IO-Compress.noarch
+    - perl-Net-Daemon.noarch
+    - perl-PlRPC.noarch
+    - rsync
+    - xinetd
+  tags: mariadb_install
+
+- name: Remove the  packages for percona_xtrabackup
+  yum:
+    name: percona-xtrabackup
+    state: absent
+  tags: mariadb_install
+
+- name: Install the  packages for percona_xtrabackup
+  yum:
+    name: '{{ percona_xtrabackup }}'
+    state: present
+  tags: mariadb_install
+
+- name: Config /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars[item]['ansible_' + network_mariadb.internal.interface]['ipv4']['address'] }} {{ hostvars[item].ansible_hostname }}"
+    state: present
+  loop: '{{ ansible_play_hosts }}'
+  when: ansible_play_batch|length > 1
+  tags: mariadb_install
+
+- name: Add group mysql
+  group:
+    name: mysql
+    state: present
+  tags: mariadb_install
+
+- name: Add user mysql
+  user:
+    name: mysql
+    group: mysql
+    home: /home/mysql
+    shell: /sbin/nologin
+    state: present
+  tags: mariadb_install
+
+- name: Down install file
+  get_url:
+    url: '{{ item }}'
+    dest: /usr/local/
+    mode: 0655
+  with_items:
+    - '{{ down_url }}'
+  tags: mariadb_install
+
+- name: Install galera package
+  yum:
+    name: /usr/local/{{ galera_version }}
+    state: present
+  tags: mariadb_install
+
+- name: Delete galera package
+  file:
+    path: /usr/local/{{ galera_version }}
+    state: absent
+  tags: mariadb_install
+
+- name: Tar mariadb file to /usr/local
+  unarchive:
+    src: /usr/local/{{ mariadb_pkg }}
+    dest: /usr/local/
+    remote_src: yes
+  tags: mariadb_install
+
+- name: Mkdir dirs
+  file:
+    path: '{{ item }}'
+    owner: mysql
+    group: mysql
+    state: directory
+    mode: 0755
+    recurse: yes
+  loop:
+    - '{{ mariadb_data_path }}'
+    - '{{ mariadb_tmp_path }}'
+    - '{{ bin_log_path }}'
+    - '{{ redo_log_path }}'
+    - '{{ undo_log_path }}'
+  tags: mariadb_install
+
+- name: Chmod mysql:mysql dirs
+  file:
+    path: '{{ item }}'
+    owner: mysql
+    group: mysql
+    state: directory
+    recurse: yes
+  loop:
+    - '/usr/local/{{ mariadb_version }}'
+  tags: mariadb_install
+
+- name: Create ln link file
+  file:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    owner: mysql
+    group: mysql
+    state: link
+  loop:
+    - { src: '/usr/local/{{ mariadb_version }}', dest: '/usr/local/mysql' }
+  tags: mariadb_install
+
+- name: Copy my.cnf template file
+  template:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    mode: '{{ item.mode }}'
+  loop:
+    - { src: 'my.cnf.j2', dest: '{{ mysql_cnf }}', mode: '0644' }
+  tags: mariadb_install
+
+- name: Copy template file
+  template:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    mode: '{{ item.mode }}'
+  loop:
+    - { src: 'files/galera_new_cluster', dest: '/tmp/galera_new_cluster', mode: '0644' }
+    - { src: 'status_check.sh.j2', dest: '/tmp/status_check.sh', mode: '0755' }
+  when: ansible_play_batch|length > 1
+  tags: mariadb_install
+
+- name: Install mariadb
+  shell: '/usr/local/{{ mariadb_version }}/scripts/mysql_install_db
+  --basedir=/usr/local/{{ mariadb_version }} --datadir={{ mariadb_data_path }} --defaults-file={{
+  mysql_cnf }} --user=mysql'
+  tags: mariadb_install

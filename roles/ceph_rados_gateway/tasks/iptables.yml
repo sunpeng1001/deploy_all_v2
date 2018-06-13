@@ -1,0 +1,24 @@
+---
+- name: Config radow_gateway iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ item }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ ceph_rados_gateway.port }}'
+  loop:
+    - '{{ network_openstack_baremetal.provision.cidr }}'
+    - '{{ network_openstack.management.cidr }}'
+    - '{{ network_openstack.storage.cidr }}'
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for Ceph Rados Gateway {mark}"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack_baremetal.provision.cidr }} -p tcp -m multiport --dport {{ ceph_rados_gateway.port }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ ceph_rados_gateway.port }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.storage.cidr }} -p tcp -m multiport --dport {{ ceph_rados_gateway.port }} -j ACCEPT

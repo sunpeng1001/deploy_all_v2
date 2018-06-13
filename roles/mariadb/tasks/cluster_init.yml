@@ -1,0 +1,42 @@
+---
+- name: Cluster init for master
+  shell: |
+    /usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf --wsrep-new-cluster --user=mysql &
+    /tmp/status_check.sh 'false'
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "delete from mysql.user where user!='root' or host!='localhost';"
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "drop database if exists test;"
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "truncate mysql.db;"
+
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "grant reload,lock tables,process,replication client on *.* to 'sstuser'@'localhost' identified by '{{ mysql_sst_dbpass }}';"
+
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "grant all on *.* to '{{ mariadb.admin.user }}'@'%' identified by '{{ mariadb.admin.password }}' with grant option;"
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "grant all on *.* to '{{ mariadb.admin.user }}'@'localhost' identified by '{{ mariadb.admin.password }}' with grant option;"
+
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "grant replication slave, replication client on *.* to 'repl'@'localhost' identified by password '{{ repl_pass }}';"
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "grant select,reload,lock tables,process,replication client on *.* to 'bkpuser'@'localhost' identified by '{{ bkpuser_pass }}';"
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "grant create,drop,alter,insert,select,update,delete,index,create view,show view,alter routine,create routine,execute,lock tables,create user,process,reload,replication client,replication slave,show databases,shutdown,super on *.* to 'admin'@'localhost' identified by '{{ admin_pass }}';"
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "grant process on *.* to 'clustercheckuser'@'localhost' identified by '{{ clustercheckuser_pass }}';"
+
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -e "set password for root@'localhost'=password('{{ mysql_root_pass }}');"
+    /usr/local/mysql/bin/mysql -P{{ mariadb.port }} -uroot -p{{ mysql_root_pass }} -e "flush privileges;"
+    /tmp/status_check.sh 'true'
+  when: inventory_hostname == groups.mariadb[0]
+
+- name: Cluster init for slave b
+  shell: |
+    /usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf --user=mysql &
+    /tmp/status_check.sh 'true'
+  when: inventory_hostname == groups.mariadb[1]
+
+- name: Cluster init for slave c
+  shell: |
+    /usr/local/mysql/bin/mysqld_safe --defaults-file=/etc/my.cnf --user=mysql &
+    /tmp/status_check.sh 'true'
+  when: inventory_hostname == groups.mariadb[2]
+
+- name: Delete file for /tmp/status_check.sh
+  file:
+    path: '{{ item }}'
+    state: absent
+  loop:
+    - '/tmp/status_check.sh'

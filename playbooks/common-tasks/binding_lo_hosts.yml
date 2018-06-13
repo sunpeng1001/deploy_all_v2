@@ -1,0 +1,6 @@
+---
+- name: Config /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: '127.0.0.1 {{ ansible_hostname }}'
+    state: present

@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#:***********************************************
+#:Program: MariaDB Cluster Status check the script
+#:
+#:Author: lian-jihong@qq.com
+#:
+#:History: 2017-09-22
+#:
+#:Version: 1.0
+#:***********************************************
+
+MYSQL_USERNAME="root"
+
+if $1; then
+    MYSQL_PASSWORD="{{ mysql_root_pass }}"
+else
+    MYSQL_PASSWORD=""
+fi
+
+ERR_FILE="/dev/null"
+DEFAULTS_EXTRA_FILE="/etc/my.cnf"
+TIMEOUT=10
+EXTRA_ARGS=""
+
+function service_status()
+ {
+    if [[ -n "$MYSQL_USERNAME" ]]; then
+        EXTRA_ARGS="$EXTRA_ARGS --user=${MYSQL_USERNAME}"
+    fi
+    if [[ -n "$MYSQL_PASSWORD" ]]; then
+        EXTRA_ARGS="$EXTRA_ARGS --password=${MYSQL_PASSWORD}"
+    fi
+
+    if [[ -r $DEFAULTS_EXTRA_FILE ]];then
+        MYSQL_CMDLINE="/usr/local/mysql/bin/mysql --defaults-extra-file=$DEFAULTS_EXTRA_FILE -nNE --connect-timeout=$TIMEOUT \
+                        --user=${MYSQL_USERNAME} --password=${MYSQL_PASSWORD}"
+    else
+        MYSQL_CMDLINE="/usr/local/mysql/bin/mysql -nNE --connect-timeout=$TIMEOUT --user=${MYSQL_USERNAME} --password=${MYSQL_PASSWORD}"
+    fi
+
+    wsrep_local_state=$($MYSQL_CMDLINE -e "SHOW STATUS LIKE 'wsrep_local_state';" 2>${ERR_FILE} | tail -1 2>>${ERR_FILE})
+    wsrep_local_state_comment=$($MYSQL_CMDLINE -e "SHOW STATUS LIKE 'wsrep_local_state_comment';" 2>${ERR_FILE} | tail -1 2>>${ERR_FILE})
+    wsrep_cluster_status=$($MYSQL_CMDLINE -e "SHOW STATUS LIKE 'wsrep_cluster_status';" 2>${ERR_FILE} | tail -1 2>>${ERR_FILE})
+
+    if [[ "${wsrep_cluster_status}" == "Primary" ]] && [[ "${wsrep_local_state_comment}" == "Synced" && "${wsrep_local_state}" == "4" ]]
+    then
+        echo "true"
+    else
+        echo "false"
+    fi
+ }
+
+function exec_next()
+{
+    taga="true"
+    while $taga
+    do
+        if `service_status`; then
+            taga="false"
+        else
+            sleep 5s
+        fi
+    done
+}
+
+`exec_next`

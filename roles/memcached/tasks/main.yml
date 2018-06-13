@@ -1,0 +1,12 @@
+---
+- import_tasks: iptables.yml
+  tags: memcached_iptables
+
+- import_tasks: install.yml
+  tags: memcached_install
+
+- import_tasks: config.yml
+  tags: memcached_config
+
+- import_tasks: start.yml
+  tags: memcached_start

@@ -1,0 +1,40 @@
+---
+# roles/ironic/tasks/install.yml
+
+- name: Install base packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - httpd
+    - socat
+    - openstack-selinux
+    - MySQL-python
+    - python-shade
+
+- name: Install pxe related packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - tftp-server
+    - syslinux-tftpboot
+    - xinetd
+    - ipxe-bootimgs
+
+- name: Install nova related packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openstack-nova-compute
+    - openstack-nova-serialproxy
+
+- name: Install ironic related packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python-ironicclient
+    - openstack-ironic-api
+    - openstack-ironic-conductor

@@ -1,0 +1,122 @@
+---
+- name: Create log path
+  file:
+    path: "{{ log_path }}"
+    owner: root
+    group: root
+    state: directory
+
+- name: Create neutron log path
+  file:
+    path: "{{ log_path }}/neutron"
+    owner: neutron
+    group: neutron
+    state: directory
+    recurse: yes
+
+- name: Modify neutron log path
+  shell: '{{ item }}'
+  loop:
+    - 'sed -i "s#/var/log/neutron#{{ log_path }}/neutron#g" /usr/lib/systemd/system/neutron-openvswitch-agent.service'
+    - 'sed -i "s#/var/log/neutron#{{ log_path }}/neutron#g" /usr/lib/systemd/system/neutron-metadata-agent.service'
+    - 'sed -i "s#/var/log/neutron#{{ log_path }}/neutron#g" /usr/lib/systemd/system/neutron-l3-agent.service'
+    - 'sed -i "s#/var/log/neutron#{{ log_path }}/neutron#g" /usr/lib/systemd/system/neutron-dhcp-agent.service'
+    - 'systemctl daemon-reload'
+
+- name: Copy dhcp&dnsmasq conf file
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'dnsmasq-neutron_conf.j2', dest: '/etc/neutron/dnsmasq-neutron.conf' }
+    - { src: 'dhcp_agent_ini.j2', dest: '/etc/neutron/dhcp_agent.ini' }
+
+- name: Copy neuton conf file
+  template:
+    src: neutron_conf.j2
+    dest: /etc/neutron/neutron.conf
+  notify: "{{ item }}"
+  loop:
+    - Restart neutron-l3-agent
+    - Restart neutron-metadata-agent
+    - Restart neutron-openvswitch-agent
+    - Restart neutron-dhcp-agent
+
+- name: Copy l3-agent conf file
+  template:
+    src: l3_agent_ini.j2
+    dest: /etc/neutron/l3_agent.ini
+  notify: Restart neutron-l3-agent
+
+- name: Copy metadata-agentfile
+  template:
+    src: metadata_agent_ini.j2
+    dest: /etc/neutron/metadata_agent.ini
+  notify: Restart neutron-metadata-agent
+
+- name: Copy openvswitch conf file
+  template:
+    src: openvswitch_agent_ini.j2
+    dest: /etc/neutron/plugins/ml2/openvswitch_agent.ini
+  notify: Restart neutron-openvswitch-agent
+
+- name: Add modprobe br_netfilter
+  modprobe: name=br_netfilter state=present
+
+- name: Edit nova node /etc/sysctl.conf
+  sysctl: sysctl_file=/etc/sysctl.conf name={{ item.name }} state=present value={{ item.value }}
+  loop:
+    - { name: 'net.ipv4.conf.all.rp_filter', value: '0' }
+    - { name: 'net.ipv4.conf.default.rp_filter', value: '0' }
+    - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+    - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+    - { name: 'net.ipv4.ip_forward', value: '1' }
+
+- name: Start openvswitch service
+  service:
+    name: openvswitch
+    state: started
+    enabled: yes
+
+- name: Register br-ex-exist var
+  shell: ovs-vsctl show|grep "Bridge br-ex" &>/dev/null && echo 0 || echo 1
+  register: br_ex_exist
+
+- name: Create ovs-vsctl bridge br-ex
+  openvswitch_bridge:
+    bridge: br-ex
+    state: present
+  when: br_ex_exist.stdout == '1'
+
+- name: Register br-vlan-exist var
+  shell: ovs-vsctl show|grep "Bridge br-vlan" &>/dev/null && echo 0 || echo 1
+  register: br_vlan_exist
+
+- name: Create ovs-vsctl bridge br-vlan
+  openvswitch_bridge:
+    bridge: br-vlan
+    state: present
+  when:
+    - network_openstack.tenant.network_type is not defined or network_openstack.tenant.network_type == 'vlan' or not network_openstack.tenant.network_type
+    - br_vlan_exist.stdout == '1'
+
+- name: Add port to bridge br-vlan
+  openvswitch_port:
+    bridge: br-vlan
+    port: '{{ network_openstack_compute.tenant.interface }}'
+    state: present
+  when: network_openstack.tenant.network_type is not defined or network_openstack.tenant.network_type == 'vlan' or not network_openstack.tenant.network_type
+
+- name: Add port to bridge br-ex
+  openvswitch_port:
+    bridge: br-ex
+    port: '{{ network_openstack_compute.public.interface }}'
+    state: present
+
+- name: Turn off the network GRO function for public_interface_name
+  shell: 'ethtool -K {{ network_openstack_compute.public.interface }} gro off'
+
+- name: Disable service neutron-ovs-cleanup
+  service:
+    name: neutron-ovs-cleanup
+    enabled: no

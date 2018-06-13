@@ -1,0 +1,14 @@
+---
+- name: Nova packages install
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openstack-nova-compute
+    - openstack-selinux
+
+- name: Install ceph
+  yum:
+    name: ceph
+    state: present
+  when: backend_openstack.nova.images_type == 'rbd'

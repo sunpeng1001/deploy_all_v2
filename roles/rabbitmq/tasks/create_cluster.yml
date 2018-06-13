@@ -1,0 +1,77 @@
+---
+- name: Pull erlang.cookie to /tmp
+  synchronize:
+    mode: pull
+    src: /var/lib/rabbitmq/.erlang.cookie
+    dest: "{{ inventory_dir }}/tmp/erlang.cookie"
+    archive: yes
+    checksum: yes
+  when: inventory_hostname == master
+
+- name: Stop rabbitmq-server on all rabbit nodes
+  service:
+    name: rabbitmq-server
+    state: stopped
+
+- name: Copy erlang cookie to all rabbit other nodes
+  copy:
+    src: "{{ inventory_dir }}/tmp/erlang.cookie"
+    dest: /var/lib/rabbitmq/.erlang.cookie
+    owner: rabbitmq
+    group: rabbitmq
+    mode: "400"
+  when: inventory_hostname != master
+
+- name: Remove directory mnesia on all rabbit nodes
+  file:
+    path: /var/lib/rabbitmq/mnesia/
+    state: absent
+
+- name: Start rabbitmq master node
+  service:
+    name: rabbitmq-server
+    state: started
+  when: inventory_hostname == master
+
+- name: start rabbitmq other nodes
+  service:
+    name: rabbitmq-server
+    state: started
+  when: inventory_hostname != master
+
+- name: Stopp rabbitmq app
+  shell: rabbitmqctl stop_app
+  when: inventory_hostname != master
+
+- name: Get rabbitmq master hostname
+  shell: hostname
+  register: master_hostname
+  when: inventory_hostname == master
+  run_once: true
+  changed_when: false
+
+- name: Join rabbitmq cluster
+  shell: rabbitmqctl join_cluster rabbit@'{{ master_hostname.stdout }}'
+  when: inventory_hostname != master
+
+- name: Start rabbitmq app
+  shell: rabbitmqctl start_app
+  #when: master != 'true'
+  when: inventory_hostname != master
+
+- name: Set rabbitmq ha policy
+  rabbitmq_policy:
+    name: 'ha-all'
+    pattern: '^(?!amq\.).*'
+    tags:
+      ha-mode: all
+      ha-sync-mode: automatic
+    state: present
+  run_once: true
+
+- name: Delete erlang cookie
+  file:
+    path: "{{ inventory_dir }}/tmp/erlang.cookie"
+    state: absent
+  connection: local
+  run_once: true

@@ -1,0 +1,19 @@
+---
+- name: Base packages install
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python-openstackclient
+    - openstack-selinux
+    - MySQL-python
+    - python-shade
+
+- name: Neutron packages install
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openstack-neutron
+    - openstack-neutron-ml2
+    - ebtables

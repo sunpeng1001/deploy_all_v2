@@ -1,0 +1,17 @@
+---
+- name: Config rgw iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ ceph_rados_gateway.port }}'
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: '# {mark} iptables rules for Ceph Rados Gateway {mark} #'
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -p tcp -m multiport --dport {{ ceph_rados_gateway.port }} -j ACCEPT

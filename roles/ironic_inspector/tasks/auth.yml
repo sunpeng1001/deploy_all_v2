@@ -1,0 +1,44 @@
+---
+
+- block:
+  - name: Create ironic-inspector user
+    os_user:
+      state: present
+      name: ironic-inspector
+      password: "{{ openstack_ironic_inspector.auth.password }}"
+      domain: default
+      default_project: service
+
+  - name:  Add admin role to the user ironic-inspector
+    os_user_role:
+      user: ironic-inspector
+      role: admin
+      project: service
+
+  - name: Create ironic service entity
+    os_keystone_service:
+      state: present
+      name: ironic-inspector
+      service_type: baremetal-introspection
+      description: Bare Metal Introspection Service
+
+  - name: Create ironic-inspector API endpoint
+    os_keystone_endpoint:
+      service: ironic-inspector
+      endpoint_interface: "{{ item }}"
+      url: http://{{ ironic_inspector_api_host }}:{{ ironic_inspector_api_port }}
+      region: RegionOne
+      state: present
+    loop:
+      - admin
+      - public
+      - internal
+  environment:
+    OS_PROJECT_DOMAIN_NAME: default
+    OS_USER_DOMAIN_NAME: default
+    OS_PROJECT_NAME: admin
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ openstack_keystone.auth.password }}"
+    OS_AUTH_URL: "http://{{ auth_admin_host }}:{{ auth_admin_port }}/v3"
+    OS_IDENTITY_API_VERSION: 3
+    OS_IMAGE_API_VERSION: 2

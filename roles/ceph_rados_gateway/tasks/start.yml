@@ -1,0 +1,22 @@
+---
+# roles/ceph_rados_gateway/tasks/start.yml
+
+- name: Copy scrips to rgw server
+  template:
+    src: realserver.sh.j2
+    dest: /etc/init.d/realserver.sh
+    mode: 0755
+
+- name: Enable rgw target
+  service:
+    name: ceph-radosgw.target
+    enabled: true
+
+- name: Start rgw
+  service:
+    name: "ceph-radosgw@rgw.{{ ansible_hostname }}"
+    state: started
+    enabled: true
+
+- name: Start the following services in order to rgw
+  shell: /etc/init.d/realserver.sh start

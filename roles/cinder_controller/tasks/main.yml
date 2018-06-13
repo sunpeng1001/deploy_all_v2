@@ -1,0 +1,29 @@
+---
+- import_tasks: iptables.yml
+  tags: cinder_controller_iptables
+
+- import_tasks: install.yml
+  tags: cinder_controller_install
+
+- import_tasks: db.yml
+  tags: cinder_controller_db
+
+- import_tasks: auth.yml
+  tags: cinder_controller_auth
+
+- import_tasks: config.yml
+  tags: cinder_controller_config
+
+- import_tasks: db_sync.yml
+  tags: cinder_controller_db_sync
+
+- import_tasks: start.yml
+  tags: cinder_controller_start
+
+- include_tasks: ha.yml
+  loop: "{{ groups['os_ha'] }}"
+  loop_control:
+    loop_var: outer_item
+  tags: cinder_controller_ha
+  when: network_openstack.management.vip is defined and network_openstack.management.vip
+ 

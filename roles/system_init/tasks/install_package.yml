@@ -1,0 +1,9 @@
+---
+- name: Install base package
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - vim
+    - net-tools
+    - ntpdate

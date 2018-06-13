@@ -1,0 +1,4 @@
+---
+- hosts: os_ha
+  roles:
+    - haproxy_keepalived

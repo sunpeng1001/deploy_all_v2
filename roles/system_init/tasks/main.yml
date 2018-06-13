@@ -1,0 +1,66 @@
+---
+# roles/system_init/tasks/main.yml
+
+- import_tasks: base.yml
+  tags:
+    - base_config
+
+- import_tasks: hostname.yml
+  tags:
+    - hostname_config
+
+# - import_tasks: sshd_config.yml
+#   tags:
+#     - sshd_config
+
+- import_tasks: dns_config.yml
+  when:
+    - dns_servers is defined
+    - dns_servers is iterable
+    - dns_servers is not string
+  tags:
+    - dns_config
+
+- import_tasks: repo_config.yml
+  tags:
+    - repo_config
+
+# - import_tasks: optimize_users_and_groups.yml
+#   tags:
+#     - user_and_group_del
+
+# - import_tasks: add_user.yml
+#   tags:
+#     - user_add
+
+# - import_tasks: limits_config.yml
+#   tags:
+#     - limits_config
+
+# - import_tasks: history_config.yml
+#   tags:
+#     - history_config
+
+- import_tasks: selinux_disable.yml
+  tags:
+    - selinux_disable
+
+- import_tasks: install_package.yml
+  tags:
+    - pkgs_base_install
+
+- import_tasks: iptables.yml
+  tags:
+    - iptables_config
+
+# - import_tasks: sysctl_config.yml
+#   tags:
+#     - sysctl_config
+
+# - import_tasks: disable_system_log_cut.yml
+#   tags:
+#     - logrotate_config
+
+# - import_tasks: reboot.yml
+#   tags:
+#     - reboot

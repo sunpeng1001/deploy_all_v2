@@ -1,0 +1,19 @@
+---
+################Global variables##################
+#Haproxy.cfg, keepalived.conf The value required
+#for the VIP parameter in the configuration file
+nic: eth0
+vip: 10.10.11.210
+netmask: 24
+master: "{{ groups['haproxy_keepalived_os'] | min }}"
+slave: "{{ groups['haproxy_keepalived_os'] | max }}"
+
+#keepalived virtual router id range 0-255
+vid: 70
+
+#user password for look haproxy stats.
+haproxy_stats_user: admin123
+haproxy_stats_pass: admin321
+
+#haproxy web port
+haproxy_web_port: 8888

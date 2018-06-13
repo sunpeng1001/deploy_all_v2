@@ -1,0 +1,73 @@
+---
+- name: Sysctl config
+  sysctl:
+    name: vm.swappiness
+    value: 0
+    state: present
+  tags: mariadb_datainit
+
+- name: Set file ulimit
+  template:
+    src: files/system.conf
+    dest: /etc/systemd/system.conf
+  tags: mariadb_datainit
+
+- name: Data disk format xfs
+  filesystem:
+    fstype: '{{ disk_type }}'
+    dev: '{{ disk_name }}'
+  tags: mariadb_datainit
+
+- name: Create data directory
+  file:
+    path: '{{ disk_path }}'
+    state: directory
+  tags: mariadb_datainit
+
+- name: Data disk init mount
+  mount:
+    path: '{{ disk_path }}'
+    src: '{{ disk_name }}'
+    fstype: '{{ disk_type }}'
+    opts: '{{ disk_vars }}'
+    state: mounted
+  tags: mariadb_datainit
+
+- name: Del /etc/fstab parameter
+  lineinfile:
+    dest: /etc/fstab
+    state: absent
+    regexp: ^{{ disk_name }}
+  tags: mariadb_datainit
+
+- name:  Uuid mount /etc/fstab config file copy
+  template:
+    src: disk_uuid_mount.sh.j2
+    dest: /tmp/disk_uuid_mount.sh.j2
+    mode: 655
+  tags: mariadb_datainit
+
+- name: Uuid mount /etc/fstab config file
+  shell: sh /tmp/disk_uuid_mount.sh.j2
+  tags: mariadb_datainit
+
+- name: Add group mysql
+  group:
+    name: mysql
+    state: present
+  tags: mariadb_datainit
+
+- name: Add user mysql
+  user:
+    name: mysql
+    group: mysql
+    home: /home/mysql
+    shell: /sbin/nologin
+    state: present
+  tags: mariadb_datainit
+
+- name: Remove disk_init_config_uuid scripts
+  file:
+    path: /tmp/disk_uuid_mount.sh.j2
+    state: absent
+  tags: mariadb_datainit

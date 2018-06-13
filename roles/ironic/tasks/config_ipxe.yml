@@ -1,0 +1,43 @@
+---
+# roles/ironic/tasks/config_ipxe.yml
+
+- name: Make sure directory is exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ironic
+    group: root
+    mode: 0755
+  loop:
+    - /tftpboot
+    - /httpboot
+
+- name: Config /tftpboot/map-file
+  copy:
+    src: tftpboot_map-file
+    dest: /tftpboot/map-file
+    owner: ironic
+    group: ironic
+    mode: 0644
+
+- name: Copy ipxe related files to /tftpboot
+  copy:
+    src: /usr/share/ipxe/{{ item }}
+    dest: /tftpboot
+    remote_src: true
+    owner: ironic
+    group: ironic
+    mode: 0644
+  loop:
+    - ipxe.efi
+    - undionly.kpxe
+
+- name: Config /etc/xinetd.d/tftp
+  copy:
+    src: xinetdd_tftp
+    dest: /etc/xinetd.d/tftp
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - Restart xinetd

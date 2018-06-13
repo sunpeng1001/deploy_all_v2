@@ -1,0 +1,73 @@
+---
+# roles/ironic/tasks/iptables.yml
+
+- name: Config ironic and nova-serialproxy iptables for management network
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack.management.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ item }}'
+  loop:
+    - '{{ openstack_ironic.port.api }}'
+    - '{{ openstack_nova.port.serialproxy }}'
+
+- name: Config ironic iptables tcp rules for provision network
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack_baremetal.provision.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ openstack_ironic.port.api }}'
+
+- name: Config ironic iptables udp rules for provision network
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack_baremetal.provision.cidr }}'
+    protocol: udp
+    match: multiport
+    destination_port: '{{ item }}'
+  loop:
+    - '{{ port_udp_dnsmasq }}'
+    - '{{ port_udp_tftp }}'
+
+- name: Insert tcp iptables rules to /etc/sysconfig/iptables for OpenStack Ironic
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for OpenStack Ironic {mark} #"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_ironic.port.api }} -j ACCEPT
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_ironic_inspector.port.api }} -j ACCEPT
+      -A INPUT -s {{ network_openstack_baremetal.provision.cidr }} -p tcp -m multiport --dport {{ openstack_ironic.port.api }} -j ACCEPT
+      -A INPUT -s {{ network_openstack_baremetal.provision.cidr }} -p tcp -m multiport --dport {{ openstack_ironic_inspector.port.api }} -j ACCEPT
+
+- name: Insert tcp iptables rules to /etc/sysconfig/iptables for OpenStack Nova serialproxy
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for OpenStack Nova serialproxy {mark} #"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_nova.port.serialproxy }} -j ACCEPT
+
+- name: Insert udp iptables rules to /etc/sysconfig/iptables for dnsmasq
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for dnsmasq {mark} #"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack_baremetal.provision.cidr }} -p udp -m multiport --dport {{ port_udp_dnsmasq }} -j ACCEPT
+
+- name: Insert udp iptables rules to /etc/sysconfig/iptables for tftp
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} iptables rules for tftp {mark} #"
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack_baremetal.provision.cidr }} -p udp -m multiport --dport {{ port_udp_tftp }} -j ACCEPT

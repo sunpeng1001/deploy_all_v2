@@ -1,0 +1,24 @@
+---
+- include_tasks: ha.yml
+  loop: "{{ groups['proxy_ha'] }}"
+  loop_control:
+    loop_var: outer_item
+  when: network_openstack.management.proxy_vip is defined and network_openstack.management.proxy_vip
+  tags:
+    - nova_novncproxy_ha
+
+- import_tasks: iptables.yml
+  tags:
+    - nova_novncproxy_iptables
+
+- import_tasks: install.yml
+  tags:
+    - nova_novncproxy_install
+
+- import_tasks: config.yml
+  tags:
+    - nova_novncproxy_config
+
+- import_tasks: start.yml
+  tags:
+    - nova_novncproxy_start

@@ -1,0 +1,10 @@
+---
+- name: Restart nova services
+  service:
+    name: openstack-nova-compute
+    state: restarted
+
+- name: Restart libvirtd
+  service:
+    name: libvirtd
+    state: restarted

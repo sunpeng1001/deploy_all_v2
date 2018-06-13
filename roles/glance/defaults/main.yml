@@ -1,0 +1,2 @@
+---
+glance_log_path: "{{ log_path }}/glance"

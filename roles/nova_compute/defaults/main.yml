@@ -1,0 +1,13 @@
+---
+#compute iptables variables
+libvirtd_port: 16509
+compute_vnc_port: '5900:5999'
+
+migrate_network: "{% if 'cidr' in network_openstack_compute.tenant %}{{ network_openstack_compute.tenant.cidr }}{% else %}{{ network_openstack_compute.storage.cidr }}{% endif %}"
+live_migration_interface: "{% if 'cidr' in network_openstack_compute.tenant %}{{ network_openstack_compute.tenant.interface }}{% else %}{{ network_openstack_compute.storage.interface }}{% endif %}"
+
+iptables_compute_udp_port:
+  - 4789
+
+#log path variable
+nova_log_path: '{{ log_path }}/nova'

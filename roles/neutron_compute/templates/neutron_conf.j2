@@ -1,0 +1,27 @@
+[DEFAULT]
+auth_strategy = keystone
+dhcp_lease_duration = -1
+transport_url = rabbit://{{ other_rabbit_servers }}
+debug = true
+
+[keystone_authtoken]
+auth_uri = http://{{ auth_public_host }}:{{ auth_public_port }}
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}
+memcached_servers = {{ memcached_servers }}
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = {{ openstack_neutron.auth.user }}
+password = {{ openstack_neutron.auth.password }}
+
+
+[oslo_messaging_rabbit]
+rabbit_retry_interval=1
+rabbit_retry_backoff=2
+rabbit_max_retries=0
+rabbit_ha_queues=true
+amqp_durable_queues=true
+
+[oslo_concurrency]
+lock_path = /var/lib/neutron/tmp

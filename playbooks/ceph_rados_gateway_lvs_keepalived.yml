@@ -1,0 +1,4 @@
+---
+- hosts: ceph_rados_gateway_ha
+  roles:
+    - ceph_rados_gateway_lvs_keepalived

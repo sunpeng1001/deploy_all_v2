@@ -1,0 +1,15 @@
+---
+- import_tasks: iptables.yml
+  tags: haproxy_keepalived_iptables
+
+- import_tasks: pre_install.yml
+  tags: haproxy_keepalived_preinstall
+
+- import_tasks: install.yml
+  tags: haproxy_keepalived_install
+
+- import_tasks: config.yml
+  tags: haproxy_keepalived_config
+
+- import_tasks: start.yml
+  tags: haproxy_keepalived_start

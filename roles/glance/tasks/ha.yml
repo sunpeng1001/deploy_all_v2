@@ -1,0 +1,46 @@
+---
+# roles/glance/tasks/ha.yml
+
+- name: Config glance ha iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack.management.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ openstack_glance.port.api_ha }}'
+  delegate_to: "{{ outer_item }}"
+  tags: glance_ha
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: '#{mark} iptables for glance ha port {{ item }} {mark}#'
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+        -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_glance.port.api_ha }} -j ACCEPT
+  run_once: true
+  delegate_to: "{{ outer_item }}"
+  tags: glance_ha
+
+- name: Insert glance into haproxy info /etc/haproxy/haproxy.cfg
+  blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: '#{mark} listen for OpenStack Glance {mark}#'
+    state: present
+    block: |
+        listen glance-api
+          bind {{ glance_api_host }}:{{ openstack_glance.port.api_ha }}
+          balance roundrobin
+          option  tcpka
+          option  httpchk
+          option  httplog
+         {% for host in groups['kgc_server'] %}
+         server node-{{ loop.index }} {{ host }}:{{ openstack_glance.port.api }} check inter 2000 rise 2 fall 5
+         {% endfor %}
+
+  run_once: true
+  notify: Restart haproxy
+  delegate_to: "{{ outer_item }}"
+  tags: glance_ha

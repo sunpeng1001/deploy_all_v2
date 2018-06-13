@@ -1,0 +1,76 @@
+---
+- block:
+  - name: Create cinder user
+    os_user:
+      state: present
+      name: cinder
+      password: "{{ openstack_cinder.auth.password }}"
+      domain: default
+      default_project: service
+
+  - name:  Grant an admin role on the user cinder
+    os_user_role:
+      user: cinder
+      role: admin
+      project: service
+
+  - name: Create a service for volumev2
+    os_keystone_service:
+      state: present
+      name: cinderv2
+      service_type: volumev2
+      description:  OpenStack Block Storage Service
+
+  - name: Create a service for volumev3
+    os_keystone_service:
+      state: present
+      name: cinderv3
+      service_type: volumev3
+      description:  OpenStack Block Storage Service
+
+  - name: Delete a service for volumev2
+    os_keystone_endpoint:
+      service: cinderv2
+      endpoint_interface: "{{ item }}"
+      region: RegionOne
+      state: absent
+      url: http://{{ cinder_api_host }}:{{ cinder_api_port }}/v2/%\(project_id\)s
+    loop:
+      - admin
+      - internal
+      - public
+
+  - name: Delete a service for volumev3
+    os_keystone_endpoint:
+      service: cinderv3
+      endpoint_interface: "{{ item }}"
+      region: RegionOne
+      state: absent
+      url: http://{{ cinder_api_host }}:{{ cinder_api_port }}/v3/%\(project_id\)s
+    loop:
+      - admin
+      - internal
+      - public
+
+
+  - name: Create cinder endpoint
+    shell: "{{ item }}"
+    loop:
+      - 'openstack endpoint create --region RegionOne volumev2 public http://{{ cinder_api_host }}:{{ cinder_api_port }}/v2/%\(project_id\)s'
+      - 'openstack endpoint create --region RegionOne volumev2 internal http://{{ cinder_api_host }}:{{ cinder_api_port }}/v2/%\(project_id\)s'
+      - 'openstack endpoint create --region RegionOne volumev2 admin http://{{ cinder_api_host }}:{{ cinder_api_port }}/v2/%\(project_id\)s'
+      - 'openstack endpoint create --region RegionOne volumev3 public http://{{ cinder_api_host }}:{{ cinder_api_port }}/v3/%\(project_id\)s'
+      - 'openstack endpoint create --region RegionOne volumev3 internal http://{{ cinder_api_host }}:{{ cinder_api_port }}/v3/%\(project_id\)s'
+      - 'openstack endpoint create --region RegionOne volumev3 admin http://{{ cinder_api_host }}:{{ cinder_api_port }}/v3/%\(project_id\)s'
+
+  environment:
+    OS_PROJECT_DOMAIN_NAME: default
+    OS_USER_DOMAIN_NAME: default
+    OS_PROJECT_NAME: admin
+    OS_USERNAME: admin
+    OS_PASSWORD: "{{ openstack_keystone.auth.password }}"
+    OS_AUTH_URL: "http://{{ auth_admin_host }}:{{ auth_admin_port }}/v3"
+    OS_IDENTITY_API_VERSION: 3
+    OS_IMAGE_API_VERSION: 2
+  run_once: true
+

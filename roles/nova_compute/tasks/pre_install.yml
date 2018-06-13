@@ -1,0 +1,21 @@
+---
+- name: Make sure log path is exist
+  file:
+    path: "{{ log_path }}"
+    state: directory
+    owner: root
+    group: root
+
+- name: Create group cinder
+  group:
+    name: cinder
+    state: present
+  when: backend_openstack.nova.images_type == 'rbd'
+
+- name: Create user cinder
+  user:
+    name: cinder
+    shell: /sbin/nologin
+    group: cinder
+    state: present
+  when: backend_openstack.nova.images_type == 'rbd'

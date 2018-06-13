@@ -1,0 +1,59 @@
+---
+- name: Create log path
+  file:
+    path: "{{ log_path }}"
+    owner: root
+    group: root
+    state: directory
+
+- name: Create neutron log path
+  file:
+    path: "{{ log_path }}/neutron"
+    owner: neutron
+    group: neutron
+    state: directory
+    recurse: yes
+
+- name: Modify neutron log path
+  shell: "{{ item }}"
+  loop:
+    - 'sed -i "s#/var/log/neutron#{{ log_path }}/neutron#g" /usr/lib/systemd/system/neutron-server.service'
+    - 'sed -i "s#/var/log/neutron#{{ log_path }}/neutron#g" /usr/lib/systemd/system/neutron-metadata-agent.service'
+    - 'sed -i "s#/var/log/neutron#{{ log_path }}/neutron#g" /usr/lib/systemd/system/neutron-l3-agent.service'
+    - 'systemctl daemon-reload'
+  notify: Restart neutron-server
+
+- name: Copy neutron-server conf file
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'neutron_conf.j2', dest: '/etc/neutron/neutron.conf' }
+    - { src: 'ml2_conf_ini.j2', dest: '/etc/neutron/plugins/ml2/ml2_conf.ini' }
+  notify: Restart neutron-server
+
+- name: ln ml2_conf.ini
+  file:
+    src: /etc/neutron/plugins/ml2/ml2_conf.ini
+    dest: /etc/neutron/plugin.ini
+    state: link
+
+- name: Config /usr/share/neutron/neutron-dist.conf
+  shell: sed -i 's/^driver.*$/driver = noop/g' /usr/share/neutron/neutron-dist.conf
+
+- name: Add modprobe br_netfilter
+  modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Edit sysctl.conf
+  sysctl:
+    sysctl_file: /etc/sysctl.conf
+    name: "{{ item.name }}"
+    state: present
+    value: "{{ item.value }}"
+  loop:
+    - { name: 'net.ipv4.ip_forward', value: '1' }
+    - { name: 'net.ipv4.conf.all.rp_filter', value: '0' }
+    - { name: 'net.ipv4.conf.default.rp_filter', value: '0' }
+

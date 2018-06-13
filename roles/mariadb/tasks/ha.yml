@@ -1,0 +1,55 @@
+---
+- name: Config mariadb iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: '{{ network_openstack.management.cidr }}'
+    protocol: tcp
+    match: multiport
+    destination_port: '{{ item }}'
+  run_once: true
+  delegate_to: "{{ outer_item }}"
+  loop:
+    - '{{ mariadb.port_ha }}'
+  tags: mariadb_ha
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: '#{mark} iptables for mariadb-server ha port {{ item }} {mark}#'
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+        -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ item }} -j ACCEPT
+  run_once: true
+  delegate_to: "{{ outer_item }}"
+  loop:
+    - '{{ mariadb.port_ha }}'
+  tags: mariadb_ha
+
+- name: Insert mariadb into haproxy info /etc/haproxy/haproxy.cfg
+  blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: '#{mark} listen for OpenStack mariadb-server {mark}#'
+    state: present
+    block: |
+        listen mariadb
+          bind {{ network_openstack.management.vip }}:{{ mariadb.port_ha }}
+          mode  tcp
+          balance  source
+          option  httpchk
+          option  tcplog
+          timeout  client 1800s
+          timeout  server 1800s
+
+          {% for host in groups['mariadb'] %}
+          {% if loop.first %}
+            server node-{{ loop.index }} {{ host }}:{{ mariadb.port }} check port {{ mariadb.port_cluster_check }} inter 2000 rise 2 fall 5
+          {% else %}
+          server node-{{ loop.index }} {{ host }}:{{ mariadb.port }} backup check port {{ mariadb.port_cluster_check }} inter 2000 rise 2 fall 5
+          {% endif %}
+          {% endfor %}
+  run_once: true
+  notify: Restart haproxy
+  delegate_to: "{{ outer_item }}"
+  tags: mariadb_ha

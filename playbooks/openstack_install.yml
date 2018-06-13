@@ -1,0 +1,23 @@
+---
+- import_playbook: playbook_base.yml
+- import_playbook: ceph_openstack_relatekey.yml
+- import_playbook: system_init.yml
+- import_playbook: ntp.yml
+- import_playbook: memcached_install.yml
+- import_playbook: rabbitmq.yml
+- import_playbook: haproxy_keepalived_install.yml
+- import_playbook: mariadb_install.yml
+- import_playbook: keystone.yml
+- import_playbook: glance_install.yml
+- import_playbook: cinder_controller_install.yml
+- import_playbook: neutron_controller_install.yml
+#- import_playbook: neutron_network_dvr_snat.yml
+#- import_playbook: neutron_network_legacy.yml
+- import_playbook: nova_controller.yml
+- import_playbook: nova_novncproxy.yml
+- import_playbook: cinder_compute_install.yml
+- import_playbook: neutron_compute_install.yml
+- import_playbook: nova_compute.yml
+- import_playbook: ceph_rados_gateway.yml
+- import_playbook: ironic_inspector.yml
+- import_playbook: ironic.yml

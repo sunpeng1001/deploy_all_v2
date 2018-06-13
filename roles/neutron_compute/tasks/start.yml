@@ -1,0 +1,11 @@
+---
+- name: Start neutron agents
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - neutron-openvswitch-agent
+    - neutron-metadata-agent
+    - neutron-l3-agent
+    - neutron-dhcp-agent

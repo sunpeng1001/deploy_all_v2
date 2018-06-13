@@ -1,0 +1,4 @@
+---
+- hosts: kgc_server
+  roles:
+    - glance

@@ -1,0 +1,30 @@
+---
+# role/glance/tasks/install.yml
+
+- name: Install depend packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python-openstackclient
+    - openstack-selinux
+    - MySQL-python
+    - python-shade
+
+- name: Install glance packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openstack-glance
+
+- name: Install ceph packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - ceph
+  when:
+    - backend_openstack.glance.stores is defined
+    - backend_openstack.glance.stores
+    - "'rbd' in backend_openstack.glance.stores or 'swift' in backend_openstack.glance.stores"

@@ -1,0 +1,8 @@
+---
+- name: Install memcached
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - memcached
+    - python-memcached

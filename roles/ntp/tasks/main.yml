@@ -1,0 +1,12 @@
+---
+- import_tasks: iptables.yml
+  tags: ntp_iptables
+
+- import_tasks: install.yml
+  tags: ntp_install
+
+- import_tasks: config.yml
+  tags: ntp_config
+
+- import_tasks: start.yml
+  tags: ntp_start

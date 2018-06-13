@@ -1,0 +1,7 @@
+---
+- name: Config /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars[item]['ansible_' + network_openstack.management.interface]['ipv4']['address'] }} {{ hostvars[item].ansible_hostname }}"
+    state: present
+  loop: "{{ ansible_play_batch }}"

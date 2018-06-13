@@ -1,0 +1,26 @@
+---
+- name: Make sure directory /etc/yum.repos.d is exist
+  file:
+    path: /etc/yum.repos.d/
+    state: directory
+
+- name: Copy cty.repo
+  template:
+    src: cty.repo
+    dest: /etc/yum.repos.d/cty.repo
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Find extra repo files to delete
+  find:
+    path: /etc/yum.repos.d
+    pattern: "(?!cty\\.repo)"
+    use_regex: yes
+  register: repos_to_delete
+
+- name: Delete extra repo files
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ repos_to_delete.files }}"

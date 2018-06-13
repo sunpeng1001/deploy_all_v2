@@ -1,0 +1,172 @@
+---
+# config.yml
+
+# List of DNS servers. (type: list)
+# If you want spcify namservers, you should uncomment options below.
+# Examples:
+# dns_servers:
+#   - "192.168.1.254"
+# dns_servers:
+
+# Domain for OpenStack api services. (type: dict)
+domain:
+  # keystone_public:
+  # keystone_admin:
+  # glance_api:
+  # nova_api:
+  # nova_api_metadata:
+  # nova_placement_api:
+  # nova_novncproxy:
+  # nova_serialproxy:
+  # neutron_server:
+  # cinder_api:
+  # ironic_api:
+  # ironic_api_provision:
+  # ironic_inspector_api:
+
+# NTP server info. (type: str)
+# Example:
+# ntp_server: "192.168.1.253"
+ntp_server:
+
+# YUM repo host info. (type: str)
+# Example:
+# yum_server: "192.168.1.252"
+yum_server:
+
+# OpenStack network infos for controller nodes that all related services use. (type: dict)
+network_openstack:
+  # Management network for openstack
+  # Example:
+  #   management:
+  #     interface: "eth0"
+  #     cidr: "192.168.1.0/24"
+  #     vip: "192.168.1.10"
+  management:
+    interface:
+    cidr:
+    # Virtual ip for management network which used to configure HA
+    vip:
+    # Virtual ip for management network which used to configure proxy HA
+    proxy_vip:
+
+  # Tenant network for VM's internal connection
+  tenant:
+    # Tenant network type. Supported values are: "vlan", "vxlan".
+    # If your network_type is `vlan`, you should set
+    # `network_openstack_compute.tenant.vlan_range` additionally.
+    network_type:
+    # interface:
+    # cidr:
+
+  # Storage network
+  # storage:
+    # interface:
+    # cidr:
+
+# OpenStack network infos for compute nodes that all related services use. (type: dict)
+network_openstack_compute:
+  management:
+    interface:
+    cidr:
+  # Tenant network for VM's internal connection
+  tenant:
+    interface:
+    # Vlan range if your network type is "vlan".
+    # If you set `vlan_range`, you should set
+    # `network_openstack.tenant.network_type` with value "vlan" additionally.
+    # vlan_range:
+    # cidr:
+  # Public network for VM connect to external.
+  # This option is only used when neutron l3 agent mode is DVR.
+  # public:
+    # interface:
+    # Vlan range if your public network type is vlan.
+    # vlan_range:
+  storage:
+    interface:
+    cidr:
+
+# OpenStack network infos for baremetal
+# network_openstack_baremetal:
+  # Provision network for Bare Metal nodes.
+  # provision:
+    # interface:
+    # cidr:
+    # vlan_id:
+    # dhcp_range_start:
+    # dhcp_range_end:
+    # Virtual ip for provision network which used to configure HA.
+    # vip:
+  # inspector
+    # interface:
+    # cidr:
+    # DHCP range for baremetal nodes
+    # dhcp_range_start:
+    # dhcp_range_end:
+  # ipmi:
+    # interface:
+    # cidr:
+  # switch_info:
+    # - { genericswitch: "BJMJQ-104-9-4-ASW-HWCE6851-1U43",device_type: "netmiko_huawei_vrpv8",username: "ironic",password: "Huawei@123",ip: "10.129.145.245",port: "22",ngs_mac_address: "48:8e:ef:b9:de:81",ngs_port_default_vlan: "3201",ngs_max_connections: "10" }
+
+network_ceph_rados_gateway:
+  storage:
+    interface:
+    cidr:
+  provision:
+    interface:
+    cidr:
+    vip:
+
+# MariaDB network infos.
+network_mariadb:
+  # Internal network for data communications between MariaDB Galera cluster nodes.
+  internal:
+    interface:
+    cidr:
+
+# Backends for openstack services
+backend_openstack:
+
+  # Backends for OpenStack Cinder.
+  cinder:
+    # Backends for OpenStack Cinder. (type: list)
+    #   Examples:
+    #     backends:
+    #       - ceph
+    backends:
+
+  # Backends for OpenStack Glance.
+  glance:
+    # Stores for OpenStack Glance. (type: list)
+    #   Examples:
+    #     stores:
+    #       - rbd
+    #       - swift
+    stores:
+
+  # Backends for OpenStack Neutron.
+  neutron:
+    # Mechanism drivers for OpenStack Neutron. (type: list)
+    #   Examples:
+    #     mechanism_drivers:
+    #       - openvswitch
+    mechanism_drivers:
+    # Extension drivers for OpenStack Neutron. (type: list)
+    #   Examples:
+    #     extension_drivers:
+    #       - qos
+    extension_drivers:
+
+  # Backends for OpenStack Nova.
+  nova:
+    # Compute driver for OpenStack Nova. (type: str)
+    #   Examples:
+    #     compute_driver: "libvirt"
+    compute_driver:
+
+    # VM Images format. (type: str)
+    #   Examples:
+    #     images_type: "rbd"
+    images_type:

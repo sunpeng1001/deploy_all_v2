@@ -1,0 +1,4 @@
+---
+- hosts: memcached_server
+  roles:
+    - memcached

@@ -1,0 +1,5 @@
+---
+# roles/system_init/tasks/reboot.yml
+
+- name: Reboot system
+  shell: reboot || true

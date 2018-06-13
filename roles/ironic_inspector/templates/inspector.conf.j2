@@ -1,0 +1,40 @@
+[DEFAULT]
+debug = true
+rootwrap_config = /etc/ironic-inspector/rootwrap.conf
+timeout = 900
+
+[pxe_filter]
+driver = noop
+
+[database]
+connection = mysql+pymysql://inspector:inspector@{{ db_host }}:{{ db_port }}/ironic_inspector?charset=utf8
+min_pool_size = 100
+max_pool_size = 200
+max_overflow = 50
+connection_recycle_time = 1800
+
+[ironic]
+user_domain_name=Default
+project_domain_name=Default
+os_region = RegionOne
+project_name = service
+password = {{ openstack_ironic_inspector.auth.password }}
+username = ironic-inspector
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}/v3
+auth_type = password
+
+[keystone_authtoken]
+user_domain_name=Default
+project_domain_name=Default
+auth_uri = http://{{ auth_public_host }}:{{ auth_public_port }}
+project_name = service
+password = {{ openstack_ironic_inspector.auth.password }}
+username = ironic-inspector
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}/v3
+auth_type = password
+
+[processing]
+processing_hooks = $default_processing_hooks,local_link_connection,lldp_basic
+add_ports = active
+ramdisk_logs_dir = /var/log/ironic-inspector/ramdisk
+store_data = none

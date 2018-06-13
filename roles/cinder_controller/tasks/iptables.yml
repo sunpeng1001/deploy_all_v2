@@ -1,0 +1,18 @@
+---
+- name: Config cinder_controller iptables
+  iptables:
+    action: insert
+    chain: INPUT
+    jump: ACCEPT
+    source: "{{ network_openstack.management.cidr }}"
+    protocol: tcp
+    match: multiport
+    destination_port: "{{ openstack_cinder.port.api }}"
+
+- name: Insert tcp rule to /etc/sysconfig/iptables
+  blockinfile:
+    marker: '#{mark} iptables for OpenStack Cinder {mark}#'
+    path: /etc/sysconfig/iptables
+    insertafter: '^:OUTPUT ACCEPT '
+    block: |
+      -A INPUT -s {{ network_openstack.management.cidr }} -p tcp -m multiport --dport {{ openstack_cinder.port.api }} -j ACCEPT

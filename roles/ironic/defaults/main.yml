@@ -1,0 +1,5 @@
+---
+# roles/openstack_ironic/defaults/main.yml
+
+port_udp_dnsmasq: 68
+port_udp_tftp: 69

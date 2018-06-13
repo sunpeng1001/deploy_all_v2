@@ -1,0 +1,64 @@
+[DEFAULT]
+auth_strategy = keystone
+my_ip = {{ hostvars[inventory_hostname]['ansible_' + network_openstack_compute.management.interface]['ipv4']['address'] }}
+{% if 'ceph' in backend_openstack.cinder.backends %}
+enabled_backends = ceph
+backup_driver = cinder.backup.drivers.ceph
+backup_ceph_conf = /etc/ceph/ceph.conf
+backup_ceph_user = cinder-backup
+backup_ceph_chunk_size = 134217728
+backup_ceph_pool = backups
+backup_ceph_stripe_unit = 0
+backup_ceph_stripe_count = 0
+obtain_backup_real_size = true
+{% endif %}
+glance_api_servers = http://{{ glance_api_host }}:{{ glance_api_port }}
+glance_api_version = 2
+restore_discard_excess_bytes = true
+debug = true
+verbose = true
+transport_url = rabbit://{{ other_rabbit_servers }}
+
+
+{% if 'ceph' in backend_openstack.cinder.backends %}
+[ceph]
+volume_driver = cinder.volume.drivers.rbd.RBDDriver
+rbd_pool = volumes
+rbd_ceph_conf = /etc/ceph/ceph.conf
+rbd_flatten_volume_from_snapshot = false
+rbd_max_clone_depth = 5
+rbd_store_chunk_size = 4
+rados_connect_timeout = -1
+glance_api_version = 2
+rbd_user = cinder
+rbd_secret_uuid = {{ secret_uuid }}
+image_direct_copy = True
+image_pool = images
+{% endif %}
+
+[database]
+connection = mysql+pymysql://cinder:{{ openstack_cinder.db.password }}@{{ db_host }}:{{ db_port}}/cinder
+min_pool_size = 50
+max_pool_size = 100
+max_overflow = 50
+connection_recycle_time = 1800
+[oslo_messaging_rabbit]
+rabbit_retry_interval=1
+rabbit_retry_backoff=2
+rabbit_max_retries=0
+rabbit_ha_queues=true
+amqp_durable_queues=true
+
+[keystone_authtoken]
+auth_uri = http://{{ auth_public_host }}:{{ auth_public_port }}
+auth_url = http://{{ auth_admin_host }}:{{ auth_admin_port }}
+memcached_servers = {{ memcached_servers }}
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = cinder
+password = {{ openstack_cinder.auth.password }}
+
+[oslo_concurrency]
+lock_path = /var/lib/cinder/tmp

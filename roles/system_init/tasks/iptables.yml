@@ -1,0 +1,16 @@
+---
+# roles/system_init/tasks/iptables.yml
+
+- name: Install iptables
+  yum:
+    name: iptables-services
+    state: present
+
+- name: Clean all iptables rules
+  shell: iptables -F;iptables -X
+
+- name: Start iptables service
+  service:
+    name: iptables
+    state: restarted
+    enabled: true

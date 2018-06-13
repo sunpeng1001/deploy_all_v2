@@ -1,0 +1,54 @@
+---
+# roles/ceph_rados_gateway/tasks/config.yml
+
+- name: Create rados gateway Directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ceph
+    group: ceph
+    mode: 0755
+  loop:
+    - /var/lib/ceph/radosgw
+    - /var/lib/ceph/radosgw/ceph-rgw.{{ ansible_hostname }}
+
+- name: Sync ceph relate key and config file
+  copy:
+    src: "{{ inventory_dir }}/{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'tmp/ceph.client.admin.keyring', dest: '/etc/ceph/ceph.client.admin.keyring' }
+    - { src: 'tmp/ceph.conf', dest: '/etc/ceph/ceph.conf' }
+
+- name: Create rados gateway keyring
+  command: ceph auth get-or-create client.rgw.{{ ansible_hostname }} osd 'allow rwx' mon 'allow rw' -o /var/lib/ceph/radosgw/ceph-rgw.{{ ansible_hostname }}/keyring
+  args:
+    creates: /var/lib/ceph/radosgw/ceph-rgw.{{ ansible_hostname }}/keyring
+
+- name: Set rados gateway key permissions
+  file:
+    path: "{{ item }}"
+    owner: ceph
+    group: ceph
+    mode: 0600
+  loop:
+    - /etc/ceph/ceph.client.admin.keyring
+    - /var/lib/ceph/radosgw/ceph-rgw.{{ ansible_hostname }}/keyring
+
+- name: Update ceph config file
+  blockinfile:
+    path: "/etc/ceph/ceph.conf"
+    state: present
+    marker: "# {mark} configs for client.rgw.{{ ansible_hostname }} {mark}"
+    block: |
+      [client.rgw.{{ ansible_hostname }}]
+      host = {{ ansible_hostname }}
+      rgw frontends = civetweb port={{ ceph_rados_gateway.port }}
+      rgw_swift_account_in_url = true
+- name: User create
+  shell: |
+    radosgw-admin user create --uid="GLANCE_USERNAME" --display-name="User for Glance"
+    radosgw-admin subuser create --uid=GLANCE_USERNAME --subuser=GLANCE_USERNAME:swift --access=full
+    radosgw-admin key create --subuser=GLANCE_USERNAME:swift --key-type=swift --secret=STORE_KEY
+    radosgw-admin user modify --uid=GLANCE_USERNAME --temp-url-key=TEMP_URL_KEY
+  run_once: true

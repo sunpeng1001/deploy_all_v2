@@ -1,0 +1,6 @@
+---
+- name: Start neutron service
+  service:
+    name: neutron-server
+    state: started
+    enabled: true

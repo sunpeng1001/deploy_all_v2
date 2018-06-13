@@ -1,0 +1,16 @@
+---
+- name: Copy scrips to rgw_ha master server
+  template:
+    src: keepalived.conf_master
+    dest: /etc/keepalived/keepalived.conf
+  notify:
+    - Restart keepalived
+  when: inventory_hostname == master
+
+- name: Copy scrips to rgw_ha slave server
+  template:
+    src: keepalived.conf_backup
+    dest: /etc/keepalived/keepalived.conf
+  notify:
+    - Restart keepalived
+  when: inventory_hostname == slave

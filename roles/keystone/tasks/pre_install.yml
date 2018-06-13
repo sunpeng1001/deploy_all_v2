@@ -1,0 +1,44 @@
+---
+# roles/keystone/tasks/pre_install.yml
+
+- name: Make sure log directory is exist
+  file:
+    path: "{{ log_path }}"
+    state: directory
+    owner: root
+    group: root
+    recurse: yes
+
+- name: Create group apache and keystone
+  group:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - apache
+    - keystone
+
+- name: Create user apache and keystone
+  user:
+    name: "{{ item }}"
+    shell: /sbin/nologin
+    group: "{{ item }}"
+    state: present
+  loop:
+    - apache
+    - keystone
+
+- name: Create http log directory
+  file:
+    path: "{{ log_path }}/httpd"
+    state: directory
+    owner: apache
+    group: apache
+    recurse: yes
+
+- name: Create keystone log directory
+  file:
+    path: "{{ log_path }}/keystone"
+    state: directory
+    owner: keystone
+    group: keystone
+    recurse: yes
